@@ -17,7 +17,7 @@ export function createValuesLayer({ source, ...host } = {}) {
     legendTitle: 'Cultural values',
     formatValue: formatScore,
     caveat:
-      'Survey-based country averages on a relative scale. Not a ranking of better or worse.',
+      'Latest available WVS wave per country (survey year on the card, mostly 2010 to 2014). Relative scale, not a ranking of better or worse.',
     scale: { kind: 'diverging', center: 0 },
     options: {
       key: 'dimension',

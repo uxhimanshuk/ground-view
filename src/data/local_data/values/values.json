@@ -1,15 +1,784 @@
 {
-  "meta": {
-    "placeholder": true,
-    "title": "Inglehart-Welzel cultural map country scores",
-    "note": "PLACEHOLDER. No citable published table of country-level scores could be obtained when this layer was built, so no values are shipped and none were invented. Replace this file by running scripts/build-values.mjs on a real table (see values.LICENSE.md).",
-    "dimensions": {
-      "tradSecular": "Traditional (negative) to secular-rational (positive)",
-      "survSelfExpr": "Survival (negative) to self-expression (positive)"
-    },
-    "source": null,
-    "wave": null,
-    "retrieved": null
+ "meta": {
+  "placeholder": false,
+  "title": "Inglehart-Welzel cultural map country scores",
+  "source": "World Values Survey Association, WVS Wave 1 to 6 Key Aggregates (2019), developed by Christian Welzel. https://www.worldvaluessurvey.org/WVSContents.jsp",
+  "wave": "latest available WVS wave per country",
+  "retrieved": "2026-10-14",
+  "dimensions": {
+   "tradSecular": "SVI_culmap: traditional (negative) to secular-rational (positive)",
+   "survSelfExpr": "EVI_culmap: survival (negative) to self-expression (positive)"
+  }
+ },
+ "countries": [
+  {
+   "iso3": "ALB",
+   "name": "Albania",
+   "year": 2002,
+   "wave": 4,
+   "tradSecular": 0.197,
+   "survSelfExpr": -0.38
   },
-  "countries": []
+  {
+   "iso3": "AND",
+   "name": "Andorra",
+   "year": 2005,
+   "wave": 5,
+   "tradSecular": 1.085,
+   "survSelfExpr": 2.102
+  },
+  {
+   "iso3": "ARG",
+   "name": "Argentina",
+   "year": 2013,
+   "wave": 6,
+   "tradSecular": -0.518,
+   "survSelfExpr": 1.428
+  },
+  {
+   "iso3": "ARM",
+   "name": "Armenia",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.944,
+   "survSelfExpr": -0.582
+  },
+  {
+   "iso3": "AUS",
+   "name": "Australia",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -0.39,
+   "survSelfExpr": 2.053
+  },
+  {
+   "iso3": "AZE",
+   "name": "Azerbaij.",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": 0.089,
+   "survSelfExpr": -1.212
+  },
+  {
+   "iso3": "BFA",
+   "name": "Burkina F.",
+   "year": 2007,
+   "wave": 5,
+   "tradSecular": -1.305,
+   "survSelfExpr": -0.595
+  },
+  {
+   "iso3": "BGD",
+   "name": "Banglad.",
+   "year": 2002,
+   "wave": 4,
+   "tradSecular": -1.07,
+   "survSelfExpr": -1.616
+  },
+  {
+   "iso3": "BGR",
+   "name": "Bulgaria",
+   "year": 2006,
+   "wave": 5,
+   "tradSecular": 0.606,
+   "survSelfExpr": 0.566
+  },
+  {
+   "iso3": "BHR",
+   "name": "Bahrain",
+   "year": 2014,
+   "wave": 6,
+   "tradSecular": -0.316,
+   "survSelfExpr": -1.177
+  },
+  {
+   "iso3": "BIH",
+   "name": "Bosnia",
+   "year": 2001,
+   "wave": 4,
+   "tradSecular": 0.285,
+   "survSelfExpr": -0.055
+  },
+  {
+   "iso3": "BLR",
+   "name": "Belarus",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.02,
+   "survSelfExpr": -0.012
+  },
+  {
+   "iso3": "BRA",
+   "name": "Brazil",
+   "year": 2014,
+   "wave": 6,
+   "tradSecular": -1.369,
+   "survSelfExpr": 1.192
+  },
+  {
+   "iso3": "CAN",
+   "name": "Canada",
+   "year": 2006,
+   "wave": 5,
+   "tradSecular": -0.617,
+   "survSelfExpr": 1.637
+  },
+  {
+   "iso3": "CHE",
+   "name": "Switzerld.",
+   "year": 2007,
+   "wave": 5,
+   "tradSecular": 0.629,
+   "survSelfExpr": 1.43
+  },
+  {
+   "iso3": "CHL",
+   "name": "Chile",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.553,
+   "survSelfExpr": 1.265
+  },
+  {
+   "iso3": "CHN",
+   "name": "China",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": 1.327,
+   "survSelfExpr": -0.681
+  },
+  {
+   "iso3": "COL",
+   "name": "Colombia",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -1.726,
+   "survSelfExpr": 0.896
+  },
+  {
+   "iso3": "CYP",
+   "name": "Cyprus",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.877,
+   "survSelfExpr": 1.035
+  },
+  {
+   "iso3": "CZE",
+   "name": "Czech R.",
+   "year": 1998,
+   "wave": 3,
+   "tradSecular": 1.568,
+   "survSelfExpr": 0.334
+  },
+  {
+   "iso3": "DEU",
+   "name": "Germany",
+   "year": 2013,
+   "wave": 6,
+   "tradSecular": -0.147,
+   "survSelfExpr": 1.6,
+   "note": "West German sample"
+  },
+  {
+   "iso3": "DOM",
+   "name": "Domin. R.",
+   "year": 1996,
+   "wave": 3,
+   "tradSecular": -0.931,
+   "survSelfExpr": 0.801
+  },
+  {
+   "iso3": "DZA",
+   "name": "Algeria",
+   "year": 2013,
+   "wave": 6,
+   "tradSecular": -0.768,
+   "survSelfExpr": -0.945
+  },
+  {
+   "iso3": "ECU",
+   "name": "Ecuador",
+   "year": 2013,
+   "wave": 6,
+   "tradSecular": -1.885,
+   "survSelfExpr": 0.752
+  },
+  {
+   "iso3": "EGY",
+   "name": "Egypt",
+   "year": 2000,
+   "wave": 4,
+   "tradSecular": -1.073,
+   "survSelfExpr": -1.343
+  },
+  {
+   "iso3": "ESP",
+   "name": "Spain",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.357,
+   "survSelfExpr": 2.095
+  },
+  {
+   "iso3": "EST",
+   "name": "Estonia",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": 0.765,
+   "survSelfExpr": 0.529
+  },
+  {
+   "iso3": "ETH",
+   "name": "Ethiopia",
+   "year": 2007,
+   "wave": 5,
+   "tradSecular": -1.318,
+   "survSelfExpr": 0.68
+  },
+  {
+   "iso3": "FIN",
+   "name": "Finland",
+   "year": 2005,
+   "wave": 5,
+   "tradSecular": 0.679,
+   "survSelfExpr": 1.312
+  },
+  {
+   "iso3": "FRA",
+   "name": "France",
+   "year": 2006,
+   "wave": 5,
+   "tradSecular": 0.261,
+   "survSelfExpr": 1.924
+  },
+  {
+   "iso3": "GBR",
+   "name": "U.K.",
+   "year": 2006,
+   "wave": 5,
+   "tradSecular": 0.04,
+   "survSelfExpr": 1.358
+  },
+  {
+   "iso3": "GEO",
+   "name": "Georgia",
+   "year": 1996,
+   "wave": 3,
+   "tradSecular": -0.164,
+   "survSelfExpr": -1.037
+  },
+  {
+   "iso3": "GHA",
+   "name": "Ghana",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -2.078,
+   "survSelfExpr": -0.479
+  },
+  {
+   "iso3": "GTM",
+   "name": "Guatem.",
+   "year": 2005,
+   "wave": 5,
+   "tradSecular": -2.087,
+   "survSelfExpr": 1.065
+  },
+  {
+   "iso3": "HKG",
+   "name": "Hong Kong",
+   "year": 2013,
+   "wave": 6,
+   "tradSecular": 0.922,
+   "survSelfExpr": -0.079
+  },
+  {
+   "iso3": "HRV",
+   "name": "Croatia",
+   "year": 1996,
+   "wave": 3,
+   "tradSecular": 0.938,
+   "survSelfExpr": 0.129
+  },
+  {
+   "iso3": "HUN",
+   "name": "Hungary",
+   "year": 1998,
+   "wave": 3,
+   "tradSecular": 0.871,
+   "survSelfExpr": 0.119
+  },
+  {
+   "iso3": "IDN",
+   "name": "Indonesia",
+   "year": 2006,
+   "wave": 5,
+   "tradSecular": 0.089,
+   "survSelfExpr": -1.283
+  },
+  {
+   "iso3": "IND",
+   "name": "India",
+   "year": 2014,
+   "wave": 6,
+   "tradSecular": -0.315,
+   "survSelfExpr": -0.607
+  },
+  {
+   "iso3": "IRN",
+   "name": "Iran",
+   "year": 2007,
+   "wave": 5,
+   "tradSecular": -0.167,
+   "survSelfExpr": -1.536
+  },
+  {
+   "iso3": "IRQ",
+   "name": "Iraq",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -0.911,
+   "survSelfExpr": -0.944
+  },
+  {
+   "iso3": "ITA",
+   "name": "Italy",
+   "year": 2005,
+   "wave": 5,
+   "tradSecular": 0.035,
+   "survSelfExpr": 0.365
+  },
+  {
+   "iso3": "JOR",
+   "name": "Jordan",
+   "year": 2014,
+   "wave": 6,
+   "tradSecular": -1.366,
+   "survSelfExpr": -1.187
+  },
+  {
+   "iso3": "JPN",
+   "name": "Japan",
+   "year": 2010,
+   "wave": 6,
+   "tradSecular": 1.786,
+   "survSelfExpr": -0.28
+  },
+  {
+   "iso3": "KAZ",
+   "name": "Kazakhstan",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.33,
+   "survSelfExpr": -0.245
+  },
+  {
+   "iso3": "KGZ",
+   "name": "Kyrgyztan",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.789,
+   "survSelfExpr": -0.797
+  },
+  {
+   "iso3": "KOR",
+   "name": "S. Korea",
+   "year": 2010,
+   "wave": 6,
+   "tradSecular": 0.513,
+   "survSelfExpr": -0.117
+  },
+  {
+   "iso3": "KWT",
+   "name": "Kuwait",
+   "year": 2014,
+   "wave": 6,
+   "tradSecular": -1.275,
+   "survSelfExpr": -0.829
+  },
+  {
+   "iso3": "LBN",
+   "name": "Lebanon",
+   "year": 2013,
+   "wave": 6,
+   "tradSecular": -0.519,
+   "survSelfExpr": -0.265
+  },
+  {
+   "iso3": "LBY",
+   "name": "Libya",
+   "year": 2014,
+   "wave": 6,
+   "tradSecular": -1.272,
+   "survSelfExpr": -1.091
+  },
+  {
+   "iso3": "LTU",
+   "name": "Lith.",
+   "year": 1997,
+   "wave": 3,
+   "tradSecular": 1.222,
+   "survSelfExpr": -0.814
+  },
+  {
+   "iso3": "LVA",
+   "name": "Latvia",
+   "year": 1996,
+   "wave": 3,
+   "tradSecular": 1.621,
+   "survSelfExpr": -0.401
+  },
+  {
+   "iso3": "MAR",
+   "name": "Morocco",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -1.603,
+   "survSelfExpr": -0.495
+  },
+  {
+   "iso3": "MDA",
+   "name": "Moldova",
+   "year": 2006,
+   "wave": 5,
+   "tradSecular": 0.859,
+   "survSelfExpr": -0.715
+  },
+  {
+   "iso3": "MEX",
+   "name": "Mexico",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -1.671,
+   "survSelfExpr": 1.137
+  },
+  {
+   "iso3": "MKD",
+   "name": "Maced.",
+   "year": 2001,
+   "wave": 4,
+   "tradSecular": -0.226,
+   "survSelfExpr": -0.088
+  },
+  {
+   "iso3": "MLI",
+   "name": "Mali",
+   "year": 2007,
+   "wave": 5,
+   "tradSecular": -1.306,
+   "survSelfExpr": -0.776
+  },
+  {
+   "iso3": "MNE",
+   "name": "Montenegro",
+   "year": 2001,
+   "wave": 4,
+   "tradSecular": 0.721,
+   "survSelfExpr": -0.454
+  },
+  {
+   "iso3": "MYS",
+   "name": "Malaysia",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -0.828,
+   "survSelfExpr": -0.971
+  },
+  {
+   "iso3": "NGA",
+   "name": "Nigeria",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -1.507,
+   "survSelfExpr": -1.038
+  },
+  {
+   "iso3": "NLD",
+   "name": "NL",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -0.031,
+   "survSelfExpr": 2.225
+  },
+  {
+   "iso3": "NOR",
+   "name": "Norway",
+   "year": 2008,
+   "wave": 5,
+   "tradSecular": 0.884,
+   "survSelfExpr": 2.276
+  },
+  {
+   "iso3": "NZL",
+   "name": "New Zealand",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.216,
+   "survSelfExpr": 1.76
+  },
+  {
+   "iso3": "PAK",
+   "name": "Pakistan",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -0.737,
+   "survSelfExpr": -1.611
+  },
+  {
+   "iso3": "PER",
+   "name": "Peru",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -1.515,
+   "survSelfExpr": 1.053
+  },
+  {
+   "iso3": "PHL",
+   "name": "Philipp.",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -1.447,
+   "survSelfExpr": -0.265
+  },
+  {
+   "iso3": "POL",
+   "name": "Poland",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -0.988,
+   "survSelfExpr": 0.533
+  },
+  {
+   "iso3": "PSE",
+   "name": "Palestine",
+   "year": 2013,
+   "wave": 6,
+   "tradSecular": -0.939,
+   "survSelfExpr": -1.049
+  },
+  {
+   "iso3": "QAT",
+   "name": "Qatar",
+   "year": 2010,
+   "wave": 6,
+   "tradSecular": -2.039,
+   "survSelfExpr": -0.927
+  },
+  {
+   "iso3": "ROU",
+   "name": "Romania",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -0.925,
+   "survSelfExpr": 0.035
+  },
+  {
+   "iso3": "RUS",
+   "name": "Russia",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": 0.213,
+   "survSelfExpr": 0.006
+  },
+  {
+   "iso3": "RWA",
+   "name": "Rwanda",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -1.372,
+   "survSelfExpr": -0.443
+  },
+  {
+   "iso3": "SAU",
+   "name": "S. Arabia",
+   "year": 2003,
+   "wave": 4,
+   "tradSecular": -0.401,
+   "survSelfExpr": -1.527
+  },
+  {
+   "iso3": "SGP",
+   "name": "Singapore",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -0.374,
+   "survSelfExpr": 0.136
+  },
+  {
+   "iso3": "SLV",
+   "name": "El Salv.",
+   "year": 1999,
+   "wave": 3,
+   "tradSecular": -1.414,
+   "survSelfExpr": -0.091
+  },
+  {
+   "iso3": "SRB",
+   "name": "Serbia",
+   "year": 2006,
+   "wave": 5,
+   "tradSecular": -0.076,
+   "survSelfExpr": 0.726
+  },
+  {
+   "iso3": "SVK",
+   "name": "Slovakia",
+   "year": 1998,
+   "wave": 3,
+   "tradSecular": 0.846,
+   "survSelfExpr": -0.346
+  },
+  {
+   "iso3": "SVN",
+   "name": "Slovenia",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.289,
+   "survSelfExpr": 1.828
+  },
+  {
+   "iso3": "SWE",
+   "name": "Sweden",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": 0.566,
+   "survSelfExpr": 2.709
+  },
+  {
+   "iso3": "THA",
+   "name": "Thailand",
+   "year": 2013,
+   "wave": 6,
+   "tradSecular": -0.483,
+   "survSelfExpr": -0.302
+  },
+  {
+   "iso3": "TTO",
+   "name": "Trinidad-T.",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -1.98,
+   "survSelfExpr": 0.883
+  },
+  {
+   "iso3": "TUN",
+   "name": "Tunisia",
+   "year": 2013,
+   "wave": 6,
+   "tradSecular": -1.015,
+   "survSelfExpr": -0.985
+  },
+  {
+   "iso3": "TUR",
+   "name": "Turkey",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.871,
+   "survSelfExpr": -0.776
+  },
+  {
+   "iso3": "TWN",
+   "name": "Taiwan",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": 0.655,
+   "survSelfExpr": 0.114
+  },
+  {
+   "iso3": "TZA",
+   "name": "Tanzania",
+   "year": 2001,
+   "wave": 4,
+   "tradSecular": -1.801,
+   "survSelfExpr": 0.24
+  },
+  {
+   "iso3": "UGA",
+   "name": "Uganda",
+   "year": 2001,
+   "wave": 4,
+   "tradSecular": -1.075,
+   "survSelfExpr": -0.435
+  },
+  {
+   "iso3": "UKR",
+   "name": "Ukraine",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.211,
+   "survSelfExpr": 0.104
+  },
+  {
+   "iso3": "URY",
+   "name": "Uruguay",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.338,
+   "survSelfExpr": 1.717
+  },
+  {
+   "iso3": "USA",
+   "name": "U.S.A.",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.922,
+   "survSelfExpr": 1.707
+  },
+  {
+   "iso3": "UZB",
+   "name": "Uzbekistan",
+   "year": 2011,
+   "wave": 6,
+   "tradSecular": -0.663,
+   "survSelfExpr": -1.037
+  },
+  {
+   "iso3": "VEN",
+   "name": "Venez.",
+   "year": 2000,
+   "wave": 4,
+   "tradSecular": -1.82,
+   "survSelfExpr": 0.833
+  },
+  {
+   "iso3": "VNM",
+   "name": "Vietnam",
+   "year": 2006,
+   "wave": 5,
+   "tradSecular": -0.091,
+   "survSelfExpr": -0.446
+  },
+  {
+   "iso3": "YEM",
+   "name": "Yemen",
+   "year": 2014,
+   "wave": 6,
+   "tradSecular": -1.179,
+   "survSelfExpr": -1.236
+  },
+  {
+   "iso3": "ZAF",
+   "name": "S. Africa",
+   "year": 2013,
+   "wave": 6,
+   "tradSecular": -1.078,
+   "survSelfExpr": 0.459
+  },
+  {
+   "iso3": "ZMB",
+   "name": "Zambia",
+   "year": 2007,
+   "wave": 5,
+   "tradSecular": -0.864,
+   "survSelfExpr": 0.051
+  },
+  {
+   "iso3": "ZWE",
+   "name": "Zimbabwe",
+   "year": 2012,
+   "wave": 6,
+   "tradSecular": -1.924,
+   "survSelfExpr": 0.146
+  }
+ ]
 }

@@ -205,6 +205,7 @@ export function createChoroplethLayer({
       extra: [
         meta.label !== name ? meta.label : null,
         _current.dataset.placeholder ? 'PLACEHOLDER DATA' : null,
+        row?.note || null,
       ],
     });
     return {

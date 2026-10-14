@@ -1,35 +1,39 @@
 # Values layer data (Inglehart-Welzel cultural map)
 
-Status: PLACEHOLDER. `values.json` ships with zero countries. No scores were
-fabricated and none were estimated from other data.
+`values.json` holds country-level aggregate scores only, never respondent-level
+data. Nothing is estimated or imputed: a country WVS never scored (for example
+Austria, Belgium, Denmark, Greece, Iceland, Ireland, Israel, Luxembourg, Malta,
+Portugal) is absent and shows "No data".
 
-## What goes here
+## Source
 
-Country-level aggregate scores only, on two dimensions:
+World Values Survey Association. *WVS Wave 1 to 6 Key Aggregates* (2019),
+developed by Christian Welzel. Downloaded from
+https://www.worldvaluessurvey.org/WVSContents.jsp (file
+`WVS_Wave_1_to_6_Key_Aggregates.zip`, retrieved 2026-10-14).
 
-- traditional versus secular-rational values (`tradSecular`)
-- survival versus self-expression values (`survSelfExpr`)
+- `tradSecular` is `SVI_culmap`: traditional (negative) to secular-rational (positive).
+- `survSelfExpr` is `EVI_culmap`: survival (negative) to self-expression (positive).
+- Each country carries the survey `year` and `wave` of its latest scored survey,
+  mostly wave 6 (2010 to 2014).
 
-## Licensing
+## Terms
 
-World Values Survey (WVS) data is free for non-commercial use with citation.
-Only country-level aggregate scores may be bundled, never respondent-level
-data. A real table must carry the full citation of its source, for example:
+WVS data is free for non-commercial use with citation of the source above.
+Redistribution of the survey files themselves is not part of this repository;
+only the derived country-level `values.json` is committed. Using Ground View
+commercially needs the WVS Association's permission.
 
-> Haerpfer, C., Inglehart, R., Moreno, A., Welzel, C., Kizilova, K.,
-> Diez-Medrano J., Lagos, M., Norris, P., Ponarin, E. & Puranen B. (eds.).
-> World Values Survey: Round Seven, Country-Pooled Datafile. Madrid, Spain
-> & Vienna, Austria: JD Systems Institute & WVSA Secretariat.
-> doi.org/10.14281/18241.24
+## Handling of the file's quirks
 
-Use the citation that matches the table you actually load, and record its URL
-and retrieval date in `DATA_SOURCES.md`.
+- Blank ISO3 codes on wave 6 rows are filled from other rows of the same WVS
+  country number; thirteen countries whose rows never carry a code use the
+  standard ISO 3166-1 alpha-3 code, listed in `scripts/build-values.mjs`.
+- Germany uses the West German sample (flagged "West German sample" on the
+  card); the East German sample is dropped. Northern Ireland is dropped (part of GBR).
+- Where more than one latest row exists for a country, the newest year wins.
 
-## How to fill it
+## Rebuilding
 
-Prepare a CSV with the header `iso3,name,year,wave,tradSecular,survSelfExpr`
-taken from a published table, then run:
-
-    node scripts/build-values.mjs path/to/table.csv "Full citation" "https://source-url"
-
-The script rewrites `values.json` and clears the placeholder flag.
+    python3 -I scripts/wvs-sav-to-csv.py "WVS Wave 1 to 6 Key Aggregates.sav" wvs-raw.csv
+    node scripts/build-values.mjs wvs-raw.csv

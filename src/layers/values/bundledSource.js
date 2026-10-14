@@ -18,7 +18,7 @@ export function createBundledValuesSource({ load = loadBundledJson } = {}) {
       }
       return {
         rows: rowsForDimension(table, option),
-        asOf: table.wave ? `WVS wave ${table.wave}` : null,
+        asOf: table.wave,
         placeholder: table.placeholder,
         note: table.placeholder
           ? 'Placeholder: no real scores bundled yet'

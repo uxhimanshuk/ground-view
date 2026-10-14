@@ -23,7 +23,8 @@ export const DEFAULT_DIMENSION = VALUE_DIMENSIONS[0].id;
  * @returns {{placeholder: boolean, note: string|null, source: string|null,
  *   wave: string|null, retrieved: string|null,
  *   countries: Array<{iso3: string, name: string|null, year: number|null,
- *   tradSecular: number|null, survSelfExpr: number|null}>}|null}
+ *   tradSecular: number|null, survSelfExpr: number|null,
+ *   wave?: number, note?: string}>}|null}
  */
 export function normalizeValuesTable(payload) {
   if (!payload || typeof payload !== 'object') return null;
@@ -41,6 +42,8 @@ export function normalizeValuesTable(payload) {
       tradSecular: num(row.tradSecular),
       survSelfExpr: num(row.survSelfExpr),
     };
+    if (num(row.wave) !== null) item.wave = row.wave;
+    if (typeof row.note === 'string' && row.note) item.note = row.note;
     if (item.tradSecular === null && item.survSelfExpr === null) continue;
     countries.push(item);
   }
@@ -61,7 +64,13 @@ export function rowsForDimension(table, dimension) {
     : DEFAULT_DIMENSION;
   return table.countries
     .filter((c) => c[key] !== null)
-    .map((c) => ({ iso3: c.iso3, value: c[key], year: c.year }));
+    .map((c) => ({
+      iso3: c.iso3,
+      value: c[key],
+      year: c.year,
+      ...(c.wave != null ? { wave: c.wave } : {}),
+      ...(c.note ? { note: c.note } : {}),
+    }));
 }
 
 export const formatScore = (value) =>

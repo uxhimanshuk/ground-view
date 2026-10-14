@@ -415,7 +415,9 @@ Layers in the Structure family. Aggregate country, language or region records on
 - **Meaning:** tone of news coverage about events located in a place, machine-scored. Not how people there feel.
 
 ### Values (`values`)
-- **Source:** none bundled. `src/data/local_data/values/values.json` is a marked PLACEHOLDER with no rows. No citable country-level table of Inglehart-Welzel scores could be obtained at build time, so no numbers were invented. See `values.LICENSE.md` for the citation and for `scripts/build-values.mjs`, which loads a real table.
+- **Source:** World Values Survey Association, *WVS Wave 1 to 6 Key Aggregates* (2019), developed by Christian Welzel (https://www.worldvaluessurvey.org/WVSContents.jsp), retrieved 2026-10-14. Variables `SVI_culmap` (traditional to secular-rational) and `EVI_culmap` (survival to self-expression), latest scored survey per country.
+- **Bundled:** `src/data/local_data/values/values.json`, 96 countries, built by `scripts/wvs-sav-to-csv.py` (pyreadstat) and `scripts/build-values.mjs`. The .sav and zip are not committed. Countries WVS never scored stay "No data"; Germany is the West sample, flagged on the card.
+- **Licence:** free for non-commercial use with citation; see `values.LICENSE.md`.
 
 ### Country geometry (shared choropleth helper)
 - **Source:** the Natural Earth admin-0 pack already bundled for `adminBoundaries` (`src/data/local_data/natural_earth/countries.json`), public domain. Joined on ISO3; World Bank `XKX` and `PSE` are aliased to the pack's `KOS` and `PSX`.

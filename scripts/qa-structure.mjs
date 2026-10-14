@@ -5,8 +5,8 @@
  *
  * Drives the real app in headless Chromium against a running dev server
  * (default http://localhost:4430). For each layer it enables the layer, waits
- * for stats, checks the data loaded (or, for values, that the placeholder is
- * flagged), clicks the screen centre over Germany to open a card, and saves a
+ * for stats, checks the data loaded (or, for values, that real WVS aggregates
+ * are loaded), clicks the screen centre over Germany to open a card, and saves a
  * screenshot to qa-shots/ (gitignored). News tone needs the dev server's
  * /api/news-tone proxy and live GDELT access.
  *
@@ -134,11 +134,7 @@ async function main() {
       console.log(`\n${id}`);
       await setView(page, 10, 51, 3_500_000);
       const stats = await enable(page, id);
-      if (id === 'values') {
-        record(`${id} flags the placeholder`, stats?.placeholder === true && stats.count === 0, JSON.stringify(stats));
-      } else {
-        record(`${id} loaded countries`, stats?.count > 50 && !stats.error, JSON.stringify(stats));
-      }
+      record(`${id} loaded countries`, stats?.count > 50 && !stats.error && stats.placeholder !== true, JSON.stringify(stats));
       await sleep(2500);
       await page.mouse.move(700, 440);
       await sleep(300);
@@ -150,7 +146,7 @@ async function main() {
         (layerId) => window.__godsEyeView.dataManager.layers.get(layerId).module.getAnalystRecords(5),
         id,
       );
-      record(`${id} analyst records`, id === 'values' ? records.length === 0 : records.length > 0 && records[0].kind === 'country');
+      record(`${id} analyst records`, records.length > 0 && records[0].kind === 'country');
       await page.screenshot({ path: path.join(SHOTS_DIR, `structure-${id}.png`) });
       await page.evaluate((layerId) => window.__godsEyeView.dataManager.setEnabled(layerId, false), id);
     }
