@@ -339,3 +339,43 @@ NOAA density imagery with the raw GLM product.
 ## In-app attribution
 
 The required Google Maps / Cesium credit renders on the on-globe credit line (`#cesium-credits`, bottom-left) and must stay visible — including in clean-view and recording modes (the whole line, logo + "Google Maps" + the "Data attribution" link, stays on screen; only the GEV panels/HUD fade). The layer-specific credits (adsb.lol, adsbdb, TeleGeography, OSM datacenters/dams/roads, NASA FIRMS, CelesTrak, USGS, City of Austin, Fintraffic, GBFS, Radio Browser, OpenSky, AISStream) are registered into the expandable **"Data attribution"** popover on that credit line via `viewer.creditDisplay.addStaticCredit(new Cesium.Credit(html, /* showOnScreen */ false))` — see `src/data/dataCredits.js`. When you add a new data source, add its license and attribution to this file **and** append an entry to `DATA_CREDITS` in `src/data/dataCredits.js` so it surfaces in the app.
+
+## Ground View sources
+
+### Pulse: unrest (GDELT 2.0)
+
+- **Source:** [The GDELT Project](https://www.gdeltproject.org/) 2.0 events export,
+  `https://data.gdeltproject.org/gdeltv2/{YYYYMMDDHHMMSS}.export.CSV.zip`, one file per
+  15 minutes. The GEO 2.0 API (`api.gdeltproject.org/api/v2/geo/geo`) returned HTTP 404 when
+  probed on 2026-10-14, so the export path named in the spec is the working source.
+- **Licence:** GDELT is free to use with citation of the GDELT Project.
+- **Use:** `server/providers/unrest.js` downloads the last 24 hours of slices, unzips and filters
+  server side (EventRootCode 14, city or region precision), and serves clusters at `/api/unrest`.
+  The raw export is never sent to the browser. Actor columns are never read.
+- **Meaning:** Machine-coded from news reports. Counts reflect coverage, not crowd size.
+- **Retrieved:** live; fixture `src/data/fixtures/gdelt-export-sample.tsv` captured 2026-10-14
+  (protest rows of one slice, actor columns blanked).
+
+### Pulse: attention (Wikimedia pageviews)
+
+- **Source:** Wikimedia REST pageviews `.../metrics/pageviews/top/{project}/all-access/{yyyy}/{mm}/{dd}`
+  for 22 large Wikipedia editions, previous UTC day. Keyless.
+- **Licence:** Wikimedia pageview data is CC0. Article titles link to Wikipedia (CC BY-SA).
+- **Use:** The browser asks the same-origin `/api/attention` proxy because the API's CORS preflight
+  rejects the descriptive `Api-User-Agent` header (HTTP 405); the proxy sends it.
+- **Placement:** `src/layers/attention/heartlands.js` is a hand-written table pinning each language
+  to one nominal heartland coordinate. These are editorial placements, not measurements.
+- **Meaning:** Pageviews include some automated traffic. Fixture
+  `src/data/fixtures/wikimedia-top-2026-10-12.json` captured 2026-10-14.
+
+### Pulse: crises (ReliefWeb)
+
+- **Source:** [ReliefWeb API v2](https://apidoc.reliefweb.int/) `disasters`, status `ongoing` and
+  `alert`, placed at the primary country centroid (`country.location`).
+- **Access:** ReliefWeb now requires an approved appname; an unapproved one is answered with
+  HTTP 403 (checked 2026-10-14). The proxy `server/providers/crises.js` reads it from
+  `RELIEFWEB_APPNAME` and reports `keyRequired` when it is absent. Request one at
+  `https://apidoc.reliefweb.int/parameters#appname`. Without it the layer is honestly unavailable.
+- **Licence:** ReliefWeb content is subject to its terms of use; credit ReliefWeb and the original source.
+- **Meaning:** Situations listed by ReliefWeb. Absence here is not absence of need. Fixture
+  `src/data/fixtures/reliefweb-disasters-schema-sample.json` is synthetic and says so.

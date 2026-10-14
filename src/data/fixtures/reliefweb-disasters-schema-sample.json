@@ -1,0 +1,100 @@
+{
+  "_note": "SYNTHETIC test fixture, not real data. Hand-built to the documented ReliefWeb API v2 disasters response shape (data[].fields with status, type, country.location, date, url) because ReliefWeb refuses unapproved appnames (HTTP 403, checked 2026-10-14) and no live capture was possible. Names, ids and coordinates are placeholders.",
+  "time": 0,
+  "totalCount": 6,
+  "count": 6,
+  "data": [
+    {
+      "id": "900001",
+      "fields": {
+        "id": 900001,
+        "name": "Test Flood: Exampleland",
+        "status": "ongoing",
+        "type": [{ "name": "Flood", "code": "FL", "primary": true }],
+        "country": [
+          {
+            "name": "Exampleland",
+            "iso3": "EXL",
+            "primary": true,
+            "location": { "lat": 10.5, "lon": 20.25 }
+          }
+        ],
+        "date": { "event": "2026-09-01T00:00:00+00:00", "created": "2026-09-02T00:00:00+00:00" },
+        "url": "https://reliefweb.int/disaster/fl-2026-900001-exl"
+      }
+    },
+    {
+      "id": "900002",
+      "fields": {
+        "id": 900002,
+        "name": "Test Epidemic: Sampleland and Demoland",
+        "status": "alert",
+        "type": [
+          { "name": "Other", "code": "OT" },
+          { "name": "Epidemic", "code": "EP", "primary": true }
+        ],
+        "country": [
+          { "name": "Demoland", "iso3": "DML", "location": { "lat": -5, "lon": 30 } },
+          {
+            "name": "Sampleland",
+            "iso3": "SPL",
+            "primary": true,
+            "location": { "lat": -12.75, "lon": 28.5 }
+          }
+        ],
+        "date": { "created": "2026-08-15T00:00:00+00:00" },
+        "url": "https://reliefweb.int/disaster/ep-2026-900002-spl"
+      }
+    },
+    {
+      "id": "900003",
+      "fields": {
+        "id": 900003,
+        "name": "Test Complex Emergency: Fictionia",
+        "status": "ongoing",
+        "type": [{ "name": "Complex Emergency", "code": "CE", "primary": true }],
+        "country": [
+          { "name": "Fictionia", "primary": true, "location": { "lat": 33, "lon": 65 } }
+        ],
+        "date": { "event": "2026-01-10T00:00:00+00:00" },
+        "url": "https://reliefweb.int/disaster/ce-2026-900003-fic"
+      }
+    },
+    {
+      "id": "900004",
+      "fields": {
+        "id": 900004,
+        "name": "Test Drought: Aridia",
+        "status": "ongoing",
+        "type": [{ "name": "Drought", "code": "DR", "primary": true }],
+        "country": [{ "name": "Aridia", "primary": true, "location": { "lat": 4, "lon": 40 } }],
+        "date": { "event": "2026-03-01T00:00:00+00:00" },
+        "url": "https://example.com/not-reliefweb"
+      }
+    },
+    {
+      "id": "900005",
+      "fields": {
+        "id": 900005,
+        "name": "Test Cyclone: Islandia",
+        "status": "alert",
+        "type": [{ "name": "Tropical Cyclone", "code": "TC", "primary": true }],
+        "country": [{ "name": "Islandia", "primary": true, "location": { "lat": -18, "lon": 178 } }],
+        "date": { "event": "2026-10-10T00:00:00+00:00" },
+        "url": "https://reliefweb.int/disaster/tc-2026-900005-isl"
+      }
+    },
+    {
+      "id": "900006",
+      "fields": {
+        "id": 900006,
+        "name": "Test Situation Without Centroid",
+        "status": "ongoing",
+        "type": [{ "name": "Earthquake", "code": "EQ", "primary": true }],
+        "country": [{ "name": "Nowhere", "primary": true }],
+        "date": { "event": "2026-10-01T00:00:00+00:00" },
+        "url": "https://reliefweb.int/disaster/eq-2026-900006-nwh"
+      }
+    }
+  ]
+}

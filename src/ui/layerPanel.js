@@ -21,6 +21,10 @@ const FEED_STATE_LABELS = Object.freeze({
 // Presentation order is independent of catalog registration and startup order.
 const PANEL_GROUPS = [
   {
+    label: 'Pulse',
+    ids: ['unrest', 'attention', 'crises'],
+  },
+  {
     label: 'Movement',
     ids: [
       'satellites',
@@ -80,6 +84,9 @@ const PANEL_LABELS = {
   'alpr-cameras': 'Mapped ALPR Cameras',
   'local-datacenters': 'Data Centers',
   'local-firms': 'Active Fires',
+  unrest: 'Unrest',
+  attention: 'Attention',
+  crises: 'Crises',
 };
 
 function panelLabel(layer) {

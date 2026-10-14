@@ -37,10 +37,31 @@ const CHECKER_PATH = fileURLToPath(
 const NEXT_PATH = fileURLToPath(
   new URL('../../scripts/next-layer-state-token.mjs', import.meta.url),
 );
-const reservationRows = JSON.parse(
+const allRows = JSON.parse(
   readFileSync(
     new URL('./layerStateTokenReservations.json', import.meta.url),
     'utf8',
+  ),
+);
+// Ground View layers have pre-allocated tokens (3 to 9, 00 to 02). The
+// allocation scenarios below simulate competing pull requests against the
+// pre-fork ledger, so they run on the rows without those layers.
+const GROUND_VIEW_TOKENS = Object.freeze({
+  unrest: '3',
+  attention: '4',
+  crises: '5',
+  'news-tone': '6',
+  indicators: '7',
+  values: '8',
+  languages: '9',
+  refugees: '00',
+  'migrant-stock': '01',
+  remittances: '02',
+});
+const reservationRows = allRows.filter(([id]) => !(id in GROUND_VIEW_TOKENS));
+const baseLedger = Object.fromEntries(
+  Object.entries(LAYER_STATE_TOKEN_RESERVATIONS).filter(
+    ([id]) => !(id in GROUND_VIEW_TOKENS),
   ),
 );
 
@@ -104,7 +125,17 @@ function writeCodecFixture(cwd, rows, entries) {
     providerCodec,
     readFileSync(new URL('./idSwitches.js', import.meta.url)),
   );
-  const source = readFileSync(CODEC_SOURCE_PATH, 'utf8');
+  // The fixture ledger is the pre-fork base, so drop the registry lines of the
+  // pre-allocated Ground View layers that the real source carries.
+  const source = readFileSync(CODEC_SOURCE_PATH, 'utf8')
+    .split('\n')
+    .filter(
+      (line) =>
+        !Object.keys(GROUND_VIEW_TOKENS).some((id) =>
+          line.includes(`id: '${id}',`),
+        ),
+    )
+    .join('\n');
   const registryEnd = ']);\n\nexport const REGISTERED_LAYER_IDS';
   assert.equal(source.split(registryEnd).length, 2);
   const additions = entries
@@ -125,14 +156,22 @@ function writeCodecFixture(cwd, rows, entries) {
 
 test('reservation ledger is complete, pinned, and rejects duplicate or malformed rows', () => {
   assert.deepEqual(
-    { ...parseLayerStateTokenReservations(reservationRows) },
+    { ...parseLayerStateTokenReservations(allRows) },
     { ...LAYER_STATE_TOKEN_RESERVATIONS },
   );
-  assert.equal(Object.keys(LAYER_STATE_TOKEN_RESERVATIONS).length, 29);
-  assert.deepEqual(
-    { ...LAYER_STATE_TOKEN_RESERVATIONS },
-    { ...LEGACY_LAYER_STATE_TOKENS, 'street-level': '0' },
+  assert.equal(reservationRows.length, 29);
+  assert.equal(
+    Object.keys(LAYER_STATE_TOKEN_RESERVATIONS).length,
+    allRows.length,
   );
+  assert.deepEqual(baseLedger, {
+    ...LEGACY_LAYER_STATE_TOKENS,
+    'street-level': '0',
+  });
+  for (const [id, token] of Object.entries(GROUND_VIEW_TOKENS)) {
+    if (id in LAYER_STATE_TOKEN_RESERVATIONS)
+      assert.equal(LAYER_STATE_TOKEN_RESERVATIONS[id], token, id);
+  }
   assert.throws(
     () => parseLayerStateTokenReservations(reservationRows.slice(1)),
     /Missing or changed legacy/,
@@ -350,7 +389,7 @@ test('an isolated valid two-character fixture round-trips an l field beyond the 
     );
     assert.equal(
       validateLayerStateAllocations(
-        LAYER_STATE_TOKEN_RESERVATIONS,
+        baseLedger,
         codec.LAYER_STATE_TOKEN_RESERVATIONS,
       ),
       true,

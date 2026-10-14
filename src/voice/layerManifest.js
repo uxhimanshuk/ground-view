@@ -151,6 +151,61 @@ const layers = [
     },
   },
   {
+    id: 'unrest',
+    aliases: ['protests', 'unrest', 'strikes', 'demonstrations'],
+    context: false,
+    query: {
+      fields: {
+        count: ['n', 'reports'],
+        events: ['n'],
+        placeName: ['t'],
+        country: ['t'],
+        updatedMs: ['ms'],
+      },
+      timeField: 'updatedMs',
+      window: 'last 24 h',
+      caveat:
+        'Machine-coded from news reports. Counts reflect coverage, not crowd size.',
+    },
+  },
+  {
+    id: 'attention',
+    aliases: ['attention', 'wikipedia', 'what people are reading'],
+    context: false,
+    query: {
+      fields: {
+        language: ['t'],
+        project: ['t'],
+        country: ['t'],
+        topArticle: ['t'],
+        topViews: ['n', 'views'],
+        articles: ['t'],
+        dateMs: ['ms'],
+      },
+      window: 'previous UTC day',
+      caveat: 'Pageviews include some automated traffic.',
+    },
+  },
+  {
+    id: 'crises',
+    aliases: ['crises', 'humanitarian crises', 'disasters', 'reliefweb'],
+    context: false,
+    query: {
+      fields: {
+        name: ['t'],
+        crisisType: ['t'],
+        family: ['t'],
+        status: ['t'],
+        country: ['t'],
+        countries: ['t'],
+        startMs: ['ms'],
+      },
+      timeField: 'startMs',
+      caveat:
+        'Situations listed by ReliefWeb. Absence here is not absence of need.',
+    },
+  },
+  {
     id: 'local-firms',
     aliases: ['fires', 'wildfires', 'active fires', 'firms'],
     context: true,

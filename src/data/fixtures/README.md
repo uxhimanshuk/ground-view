@@ -41,3 +41,15 @@
   2026-09-25. Each record names its XYZ tile and expected traffic eligibility.
   Modified, test-only OpenStreetMap data; same ODbL attribution and database
   share-alike terms as the OpenFreeMap fixtures above.
+
+- `gdelt-export-sample.tsv` and `gdelt-export-sample.zip` — the protest rows
+  (EventRootCode 14) plus three non-protest rows of the GDELT 2.0 events export
+  `20261014050000.export.CSV.zip`, retrieved 2026-10-14. Actor columns (5-24) are
+  blanked; all other columns are as published. The zip is the same text re-deflated.
+  Used by the unrest parser, clustering and proxy tests; never loaded at runtime.
+- `wikimedia-top-2026-10-12.json` — the top 14 entries of the Wikimedia pageviews
+  top-articles response for the en, de and ja Wikipedia editions on 2026-10-12,
+  retrieved 2026-10-14. CC0. Used by the attention tests.
+- `reliefweb-disasters-schema-sample.json` — SYNTHETIC. Hand-built to the documented
+  ReliefWeb API v2 shape because ReliefWeb rejects unapproved appnames (HTTP 403),
+  so no live capture was possible. Placeholder names, ids and coordinates; not real data.
