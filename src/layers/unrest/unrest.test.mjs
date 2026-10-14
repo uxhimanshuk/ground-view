@@ -225,7 +225,21 @@ test('layer lifecycle: disable keeps data, destroy removes every entity', async 
   };
   const entries = [];
   const layer = createUnrestLayer({
-    source: { getSnapshot: async () => normalizeUnrestSnapshot(payload()) },
+    // "Recent" is judged against the wall clock, so stamp the cluster relative
+    // to now instead of a fixed date that ages out of the halo window.
+    source: {
+      getSnapshot: async () =>
+        normalizeUnrestSnapshot(
+          payload({
+            clusters: [
+              {
+                ...payload().clusters[0],
+                updatedAt: new Date(Date.now() - 10 * 60_000).toISOString(),
+              },
+            ],
+          }),
+        ),
+    },
     overlayHost: {
       setEntries: (...args) => entries.push(args),
       setVisible: (...args) => added.push(args),

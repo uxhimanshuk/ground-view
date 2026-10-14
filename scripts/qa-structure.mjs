@@ -123,6 +123,12 @@ async function main() {
     );
     await sleep(5000);
     await page.keyboard.press('Escape');
+    // A fresh visit starts with the Ground View defaults on; their markers sit
+    // over the click point, so clear them to test each Structure layer alone.
+    await page.evaluate(async () => {
+      for (const id of ['unrest', 'attention', 'refugees'])
+        await window.__godsEyeView.dataManager.setEnabled(id, false);
+    });
 
     for (const id of ['indicators', 'values', 'news-tone']) {
       console.log(`\n${id}`);
