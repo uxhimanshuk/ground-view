@@ -105,6 +105,19 @@ async function main() {
     monitors.push(watchPage(page, { name: 'panel', errors }));
     await hookRenderErrors(page);
 
+    const openLegacyLayers = async () => {
+      await page.waitForSelector('details.data-layer-legacy > summary', {
+        timeout: 30_000,
+      });
+      await page.evaluate(() => {
+        const details = document.querySelector('details.data-layer-legacy');
+        if (!details.open) details.querySelector('summary').click();
+      });
+      await page.waitForFunction(
+        () => document.documentElement.classList.contains('gv-legacy-open'),
+        { timeout: 5_000 },
+      );
+    };
     const boot = async () => {
       await page.goto(`${url}/`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => window.__godsEyeView?.viewer, {
@@ -120,6 +133,8 @@ async function main() {
         for (const node of document.querySelectorAll('[class*=first-run]'))
           node.remove();
       });
+      // The CCTV card is hidden until the viewer opens "From God's Eye View".
+      await openLegacyLayers();
       await page.mouse.click(VIEWPORT.width / 2, VIEWPORT.height / 2);
       await nextFrames(page);
     };

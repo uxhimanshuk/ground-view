@@ -2,10 +2,14 @@
    The original surveillance rail cards are hidden, not removed. CCTV and
    Street Level stay reachable through the collapsed "From God's Eye View"
    layer section; CONTEXT only carries Contacts, Space Missions and Radio,
-   none of which act on Ground View layers. Their code and markup stay. */
-#right-context-rail > #cctv-panel,
-#right-context-rail > #street-level-panel,
-#right-context-rail > #global-context-panel {
+   none of which act on Ground View layers. Their code and markup stay.
+   layerPanel.js sets the root classes below (local mode only): a card
+   returns when its own layer is on, and all three while the section is open. */
+html:not(.gv-legacy-open):not(.gv-cctv-on) #right-context-rail > #cctv-panel,
+html:not(.gv-legacy-open):not(.gv-street-level-on)
+  #right-context-rail
+  > #street-level-panel,
+html:not(.gv-legacy-open) #right-context-rail > #global-context-panel {
   display: none !important;
 }
 
@@ -145,7 +149,9 @@
   html body #intel-hud .hud-bottom-left,
   html body #intel-hud .hud-bracket,
   html body #intel-hud .hud-sonar,
-  html body #right-context-rail,
+  html:not(.gv-legacy-open):not(.gv-cctv-on):not(.gv-street-level-on)
+    body
+    #right-context-rail,
   html body #traffic-sync-chip,
   html body #cctv-sync-chip,
   html body #orbit-indicator {
@@ -211,9 +217,13 @@
   html body #left-panel-stack > #scene-panel.collapsed {
     width: calc(25% - 5px);
   }
-  html body #left-panel-stack > #cctv-panel,
-  html body #left-panel-stack > #street-level-panel,
-  html body #left-panel-stack > #global-context-panel {
+  /* On a phone the legacy cards sit in the left stack; same reveal rules. */
+  html:not(.gv-legacy-open):not(.gv-cctv-on) body #left-panel-stack > #cctv-panel,
+  html:not(.gv-legacy-open):not(.gv-street-level-on)
+    body
+    #left-panel-stack
+    > #street-level-panel,
+  html:not(.gv-legacy-open) body #left-panel-stack > #global-context-panel {
     display: none;
   }
   html body #left-panel-stack .panel-glow {

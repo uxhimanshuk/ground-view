@@ -380,9 +380,27 @@ async function clickPanelControl(page, selector, { timeout = 5_000 } = {}) {
 }
 
 /** Load the app and clear the first-run dialog. */
+// The CCTV and Street Level rail cards stay hidden until their layer is on or
+// the viewer opens "From God's Eye View" in the layer panel. Do what a viewer
+// does to reach them.
+async function openLegacyLayers(page) {
+  await page.waitForSelector('details.data-layer-legacy > summary', {
+    timeout: 30_000,
+  });
+  await page.evaluate(() => {
+    const details = document.querySelector('details.data-layer-legacy');
+    if (!details.open) details.querySelector('summary').click();
+  });
+  await page.waitForFunction(
+    () => document.documentElement.classList.contains('gv-legacy-open'),
+    { timeout: 5_000 },
+  );
+}
+
 export async function boot(page, url) {
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await clearFirstRun(page);
+  await openLegacyLayers(page);
 }
 
 function readPanel(page) {

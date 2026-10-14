@@ -233,7 +233,38 @@ export class LayerPanel {
     this._recentImageryPanel = null;
     this._recentImageryFactory = null;
     this._toggleContainer = null;
+    this._clearLegacyRailClasses();
   }
+
+  /**
+   * The original CCTV, Street Level and Context rail cards are hidden by
+   * default (ground-view.css). They come back when their own layer is on, and
+   * all of them while the "From God's Eye View" section is open. Local mode
+   * only: the static demo has no section, so it keeps them hidden.
+   */
+  _syncLegacyRailClasses() {
+    const root = globalThis.document?.documentElement;
+    if (this._destroyed || !root?.classList) return;
+    const details = this._toggleContainer?.querySelector(
+      'details.data-layer-legacy',
+    );
+    const active = !STATIC_MODE && Boolean(details);
+    root.classList.toggle('gv-legacy-open', active && details.open);
+    root.classList.toggle('gv-cctv-on', active && this.isEnabled('cctv'));
+    root.classList.toggle(
+      'gv-street-level-on',
+      active && this.isEnabled('street-level'),
+    );
+  }
+
+  _clearLegacyRailClasses() {
+    globalThis.document?.documentElement?.classList?.remove(
+      'gv-legacy-open',
+      'gv-cctv-on',
+      'gv-street-level-on',
+    );
+  }
+
   _renderToggles() {
     if (this._destroyed || !this._toggleContainer) return;
     this._releaseBindings();
@@ -276,6 +307,9 @@ export class LayerPanel {
         // default action flips `open` after the click, so store the inverse.
         this._bind(summary, 'click', () =>
           writeLegacyOpen(!legacyDetails.open),
+        );
+        this._bind(legacyDetails, 'toggle', () =>
+          this._syncLegacyRailClasses(),
         );
         this._toggleContainer.appendChild(legacyDetails);
         target = legacyDetails;
@@ -343,6 +377,7 @@ export class LayerPanel {
           const current = this.getAll().find(({ id }) => id === layer.id);
           if (!this._destroyed && current && this._generation === generation)
             this._syncToggleButton(toggle, current);
+          this._syncLegacyRailClasses();
         }
       });
 
@@ -410,6 +445,7 @@ export class LayerPanel {
       target.appendChild(row);
     }
     this._refreshWeatherPanel();
+    this._syncLegacyRailClasses();
   }
 
   _scheduleRowControlsRefresh() {
@@ -595,6 +631,7 @@ export class LayerPanel {
       );
     }
     this._refreshWeatherPanel();
+    this._syncLegacyRailClasses();
   }
 
   _buildMetaText(layer) {
