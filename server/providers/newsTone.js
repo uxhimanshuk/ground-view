@@ -1,4 +1,5 @@
 import { inflateRawSync } from 'node:zlib';
+import { createGdeltSlices } from './gdelt/slices.js';
 import { fipsToIso3 } from '../../src/layers/newsTone/fips.js';
 
 /**
@@ -12,11 +13,9 @@ import { fipsToIso3 } from '../../src/layers/newsTone/fips.js';
  * are never read into the result.
  */
 
-const BASE = 'https://data.gdeltproject.org/gdeltv2/';
 const STEP_MS = 15 * 60_000;
 const WINDOW_FILES = 96;
 const MIN_EVENTS = 10;
-const FILE_CAP = 3 * 1024 * 1024;
 const UNZIPPED_CAP = 24 * 1024 * 1024;
 const REFRESH_MS = 30 * 60_000;
 const CONCURRENCY = 6;
@@ -34,10 +33,13 @@ export function slotStamp(ms) {
 
 /** The 96 slot stamps ending at the newest slot that is likely published. */
 export function windowStamps(now, files = WINDOW_FILES) {
+  return windowSlots(now, files).map(slotStamp);
+}
+
+/** The same window as epoch-ms slot starts, newest first. */
+export function windowSlots(now, files = WINDOW_FILES) {
   const newest = Math.floor((now - STEP_MS) / STEP_MS) * STEP_MS;
-  return Array.from({ length: files }, (_, i) =>
-    slotStamp(newest - i * STEP_MS),
-  );
+  return Array.from({ length: files }, (_, i) => newest - i * STEP_MS);
 }
 
 /** Extract the first entry of a single-file zip archive (deflate or stored). */
@@ -131,56 +133,32 @@ export function newsToneProxy({
   fetchImpl = fetch,
   now = () => Date.now(),
   timeoutMs = 60_000,
+  // Pass one shared hub to every GDELT proxy so a slice downloads once.
+  gdelt = createGdeltSlices({ fetchImpl, now }),
 } = {}) {
-  /** @type {Map<string, Map|null>} stamp -> aggregate (null = not published) */
-  const files = new Map();
+  gdelt.register('news-tone', (csv) => aggregateEvents(csv));
+  /** Slot start (ms) -> time it was found unpublished. */
   const missingAt = new Map();
   let result = null;
   let operation = null;
 
-  async function loadFile(stamp, signal) {
-    const response = await fetchImpl(`${BASE}${stamp}.export.CSV.zip`, {
-      signal,
-      redirect: 'error',
-      headers: { 'User-Agent': 'Ground View (public GDELT aggregate)' },
-    });
-    if (response.status === 404) {
-      await response.body?.cancel();
-      return null;
-    }
-    if (!response.ok) {
-      await response.body?.cancel();
-      throw new Error('news_tone_upstream_unavailable');
-    }
-    const declared = Number(response.headers.get('content-length'));
-    if (Number.isFinite(declared) && declared > FILE_CAP)
-      throw new Error('news_tone_too_large');
-    const bytes = Buffer.from(await response.arrayBuffer());
-    if (bytes.length > FILE_CAP) throw new Error('news_tone_too_large');
-    return aggregateEvents(unzipFirstEntry(bytes).toString('utf8'));
-  }
-
   async function refresh(signal) {
     const current = now();
-    const stamps = windowStamps(current);
-    for (const stamp of [...files.keys()])
-      if (!stamps.includes(stamp)) files.delete(stamp);
-    const todo = stamps.filter((stamp) => {
-      if (files.get(stamp)) return false;
+    const slots = windowSlots(current);
+    gdelt.prune('news-tone', slots.at(-1));
+    const todo = slots.filter((ts) => {
+      if (gdelt.has('news-tone', ts)) return false;
       // Retry unpublished slots only occasionally.
-      return !(
-        missingAt.has(stamp) && current - missingAt.get(stamp) < 20 * 60_000
-      );
+      return !(missingAt.has(ts) && current - missingAt.get(ts) < 20 * 60_000);
     });
     let failures = 0;
     for (let i = 0; i < todo.length; i += CONCURRENCY) {
       signal.throwIfAborted();
       await Promise.all(
-        todo.slice(i, i + CONCURRENCY).map(async (stamp) => {
+        todo.slice(i, i + CONCURRENCY).map(async (ts) => {
           try {
-            const totals = await loadFile(stamp, signal);
-            if (totals) files.set(stamp, totals);
-            else missingAt.set(stamp, current);
+            if ((await gdelt.load(ts)) === 'missing')
+              missingAt.set(ts, current);
           } catch (error) {
             if (signal.aborted) throw error;
             failures++;
@@ -188,7 +166,7 @@ export function newsToneProxy({
         }),
       );
     }
-    const loaded = stamps.filter((stamp) => files.get(stamp));
+    const loaded = slots.filter((ts) => gdelt.has('news-tone', ts));
     if (!loaded.length) throw new Error('news_tone_no_data');
     result = {
       schemaVersion: 1,
@@ -197,11 +175,13 @@ export function newsToneProxy({
       method:
         'Mean event tone per location country, weighted by mentions, over the last 24 hours.',
       fetchedAt: new Date(current).toISOString(),
-      windowStart: loaded.at(-1),
-      windowEnd: loaded[0],
+      windowStart: slotStamp(loaded.at(-1)),
+      windowEnd: slotStamp(loaded[0]),
       files: loaded.length,
       failedFiles: failures,
-      countries: combineAggregates(loaded.map((stamp) => files.get(stamp))),
+      countries: combineAggregates(
+        loaded.map((ts) => gdelt.get('news-tone', ts)),
+      ),
     };
     return result;
   }

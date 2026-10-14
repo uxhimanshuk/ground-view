@@ -25,6 +25,7 @@ import { keySetupEndpoint } from '../standalone/key-setup.js';
 import { weatherProxy } from './weather.js';
 import { firePerimetersProxy } from './firePerimeters.js';
 import { cycloneProxy } from './cyclones.js';
+import { createGdeltSlices } from './gdelt/slices.js';
 import { unrestProxy } from './unrest.js';
 import { crisesProxy } from './crises.js';
 import { attentionProxy } from './attention.js';
@@ -36,6 +37,8 @@ import { windProxy } from './wind.js';
  * `realtime` configures the voice session token endpoint.
  */
 function localProviderPlugins({ realtime } = {}) {
+  // Unrest and news tone read the same GDELT slices; one hub downloads each once.
+  const gdeltSlices = createGdeltSlices();
   return [
     openSkyProxy(),
     celestrakProxy(),
@@ -62,10 +65,10 @@ function localProviderPlugins({ realtime } = {}) {
     windProxy(),
     weatherProxy(),
     cycloneProxy(),
-    unrestProxy(),
+    unrestProxy({ gdelt: gdeltSlices }),
     crisesProxy(),
     attentionProxy(),
-    newsToneProxy(),
+    newsToneProxy({ gdelt: gdeltSlices }),
     mapillaryProxy(),
     firePerimetersProxy(),
     keySetupEndpoint(),
