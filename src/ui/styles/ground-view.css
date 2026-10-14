@@ -82,3 +82,355 @@
     font-size: 9px;
   }
 }
+
+/* ── Phone layout (up to 600 px wide) ─────────────────────────────
+   Title and toolbar at the top, the live counts as one short line under
+   them, and one bottom row: Data Layers and Scenes on the left, Visual
+   Presets and Location on the right. Opening Data Layers or Scenes shows
+   it as a bottom sheet (at most 60% of the height) with a clear close
+   control. Rules use `html body` so they win over the later-loading
+   layers.css / responsive.css / dock files without !important sprawl.
+   Desktop rendering is untouched: everything sits inside the query. */
+@media (max-width: 600px) {
+  /* Title: logo, name and tagline in one compact line. */
+  html body #title-bar {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    pointer-events: none;
+  }
+  html body #title-bar h1 {
+    margin: 0;
+    gap: 6px;
+    font-size: 13px;
+    letter-spacing: 3px;
+    white-space: nowrap;
+  }
+  html body #title-bar h1 > span:last-child {
+    display: inline;
+  }
+  html body #title-bar .subtitle {
+    display: block;
+    margin: 0;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+  }
+  html body #title-bar .title-glow,
+  html body #title-bar .frame-rate-readout {
+    display: none;
+  }
+
+  /* Toolbar icons: their own row under the title. */
+  html body #top-center-actions {
+    top: 54px;
+    left: 12px;
+    right: auto;
+    transform: none;
+  }
+
+  /* HUD: hide the corner text, keep one short counts line. */
+  html body #intel-hud .hud-top-bar,
+  html body #intel-hud .hud-bottom-bar,
+  html body #intel-hud .hud-top-left,
+  html body #intel-hud .hud-top-right,
+  html body #intel-hud .hud-bottom-left,
+  html body #intel-hud .hud-bracket,
+  html body #intel-hud .hud-sonar,
+  html body #right-context-rail,
+  html body #traffic-sync-chip,
+  html body #cctv-sync-chip,
+  html body #orbit-indicator {
+    display: none !important;
+  }
+  html body #intel-hud .hud-bottom-right {
+    top: 98px;
+    bottom: auto;
+    left: 12px;
+    right: 12px;
+    height: auto;
+    min-height: 0;
+    max-height: 16px;
+    overflow: hidden;
+  }
+  html body #intel-hud .hud-bottom-right .hud-content {
+    text-align: left !important;
+  }
+  html body #intel-hud .hud-bottom-right .hud-content > :not(.hud-gv-counts) {
+    display: none;
+  }
+  html body #intel-hud .hud-gv-counts {
+    max-width: none;
+    margin: 0;
+    font-size: 9px;
+    line-height: 1.3;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html body #global-loading-status {
+    top: 120px;
+  }
+
+  /* Bottom row: sheet launchers left, dock right. */
+  html body #left-panel-stack {
+    top: auto;
+    left: 12px;
+    right: 12px;
+    bottom: 8px;
+    width: auto;
+    max-height: none;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    align-content: flex-end;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    overflow: visible;
+    z-index: 120;
+  }
+  html body #left-panel-stack > #data-panel,
+  html body #left-panel-stack > #scene-panel {
+    pointer-events: auto;
+    flex: 0 0 calc(25% - 5px);
+    width: calc(25% - 5px);
+    min-height: 52px;
+  }
+  html body #left-panel-stack > #data-panel.collapsed,
+  html body #left-panel-stack > #scene-panel.collapsed {
+    width: calc(25% - 5px);
+  }
+  html body #left-panel-stack > #cctv-panel,
+  html body #left-panel-stack > #street-level-panel,
+  html body #left-panel-stack > #global-context-panel {
+    display: none;
+  }
+  html body #left-panel-stack .panel-glow {
+    display: none;
+  }
+  html
+    body
+    #left-panel-stack
+    > :is(#data-panel, #scene-panel).collapsed
+    :is(.data-panel-inner, .scene-panel-inner) {
+    height: 52px;
+    min-height: 52px;
+    box-sizing: border-box;
+    padding: 0;
+    overflow: hidden;
+  }
+  html body #left-panel-stack > .collapsed .panel-header {
+    height: 100%;
+    margin: 0;
+    padding: 0 4px;
+    gap: 2px;
+    justify-content: center;
+    cursor: pointer;
+  }
+  html body #left-panel-stack > .collapsed .panel-title {
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.15;
+    max-width: 4.2rem;
+  }
+  html body #left-panel-stack > .collapsed .panel-divider {
+    display: none;
+  }
+  html body #left-panel-stack > .collapsed .panel-collapse-btn {
+    min-width: 20px;
+    min-height: 44px;
+  }
+
+  /* Open panel: a bottom sheet above the row. */
+  html body #left-panel-stack > #data-panel:not(.collapsed),
+  html body #left-panel-stack > #scene-panel:not(.collapsed) {
+    order: -1;
+    flex: 0 0 100%;
+    width: 100%;
+    height: auto;
+    max-height: calc(60dvh - 66px);
+    margin-bottom: 64px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.55);
+  }
+  html
+    body
+    #left-panel-stack
+    > :is(#data-panel, #scene-panel):not(.collapsed)
+    :is(.data-panel-inner, .scene-panel-inner) {
+    display: flex;
+    flex-direction: column;
+    max-height: inherit;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  html body #left-panel-stack > :not(.collapsed) .panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    flex: 0 0 auto;
+    background: rgba(6, 14, 20, 0.97);
+  }
+  html body #left-panel-stack > :not(.collapsed) .panel-collapse-btn {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 20px;
+  }
+  html body #left-panel-stack > :not(.collapsed) :is(.data-panel-inner, .scene-panel-inner) > * {
+    flex-shrink: 0;
+  }
+  html body #data-toggles {
+    max-height: none;
+    overflow: visible;
+    flex: 0 0 auto;
+  }
+  html body #data-toggles .data-toggle-row {
+    flex-shrink: 0;
+    min-height: 44px;
+  }
+  html body #data-toggles .data-toggle-top {
+    min-height: 44px;
+    align-items: center;
+  }
+  html body #data-toggles .data-toggle-btn {
+    min-height: 36px;
+    min-width: 64px;
+  }
+
+  /* Dock: Visual Presets and Location, right half of the bottom row. */
+  /* The dock keeps its own translateX(-50%) centring (and its 8px bottom),
+     so aim that centre at the middle of the right half of the row. */
+  html body #command-dock {
+    left: calc(75% - 6px);
+    width: calc(50% - 12px);
+    z-index: 121;
+  }
+  html body #command-dock {
+    gap: 6px;
+  }
+  html body #command-dock > #control-panel,
+  html body #command-dock > #location-bar {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    height: 52px;
+    margin: 0;
+  }
+  html body #command-dock #control-panel .panel-inner,
+  html body #command-dock #location-bar .location-inner,
+  html body #command-dock #control-panel.collapsed .panel-inner,
+  html body #command-dock #location-bar.collapsed .location-inner {
+    height: 52px;
+    box-sizing: border-box;
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+  html body #command-dock .dock-tray-toggle,
+  html body #command-dock .location-toolbar {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+  html body #command-dock > #control-panel,
+  html body #command-dock > #location-bar {
+    border-radius: 12px;
+  }
+  html body #command-dock #control-panel .panel-header,
+  html body #command-dock #location-bar .location-toolbar {
+    justify-content: center;
+  }
+  html body #command-dock #control-panel .panel-title,
+  html body #command-dock #location-bar .location-toolbar-label {
+    max-width: none;
+    width: auto;
+    padding: 0;
+    overflow: visible;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 0;
+    letter-spacing: 0;
+  }
+  html body #command-dock #control-panel .panel-title::after,
+  html body #command-dock #location-bar .location-toolbar-label::after {
+    position: static;
+    display: block;
+    height: auto;
+    background: none;
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    color: rgba(206, 232, 239, 0.8);
+  }
+  html body #command-dock #control-panel .panel-title::after {
+    content: 'PRESETS';
+  }
+  html body #command-dock #location-bar .location-toolbar-label::after {
+    content: 'LOCATION';
+  }
+
+  /* About line: above the credit line, wrapped, centred. */
+  html body #gv-static-note {
+    left: 12px;
+    right: 12px;
+    bottom: calc(2vh + 7.7rem);
+    max-width: none;
+    text-align: center;
+    font-size: 9px;
+    z-index: 30;
+  }
+
+  /* Cards and captions stay inside the screen. */
+  html body .gv-scene-caption {
+    top: 130px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    transform: none;
+    box-sizing: border-box;
+    max-width: none;
+    padding: 8px 12px;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Tablet portrait (601 to 900 px): keep the toolbar clear of the title, the
+   coordinates clear of the live counts, and the about line clear of the dock. */
+@media (min-width: 601px) and (max-width: 900px) {
+  html body #top-center-actions {
+    top: 96px;
+  }
+  html body #intel-hud .hud-bottom-left {
+    display: none;
+  }
+  html body #gv-static-note {
+    left: auto;
+    right: 16px;
+    bottom: 10px;
+    max-width: calc(50vw - 100px);
+    text-align: right;
+  }
+}

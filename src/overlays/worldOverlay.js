@@ -631,7 +631,44 @@ export function normalizeOverlayEntry(sourceId, entry) {
       ? normalized.image
       : null;
   normalized._overlayLayout = {};
+  if (
+    normalized.details.length &&
+    (entry.selected === true || (variant !== 'label' && variant !== 'track'))
+  )
+    fitCardTextToPhone(normalized);
   return normalized;
+}
+
+/**
+ * On a phone-width screen a card cannot be wider than the viewport, so long
+ * detail lines wrap on word boundaries and a long title is shortened. Desktop
+ * widths pass through untouched.
+ */
+const PHONE_MAX_WIDTH_PX = 600;
+const PHONE_CARD_CHAR_PX = 6.4;
+const PHONE_CARD_SIDE_PX = 64;
+function fitCardTextToPhone(entry) {
+  const viewportWidth =
+    typeof window !== 'undefined' ? Number(window.innerWidth) || 0 : 0;
+  if (!viewportWidth || viewportWidth > PHONE_MAX_WIDTH_PX) return;
+  const maxChars = Math.max(
+    18,
+    Math.floor((viewportWidth - PHONE_CARD_SIDE_PX) / PHONE_CARD_CHAR_PX),
+  );
+  if (entry.title.length > maxChars - 4)
+    entry.title = `${entry.title.slice(0, maxChars - 5).trimEnd()}…`;
+  const lines = [];
+  for (const line of entry.details) {
+    let rest = line;
+    while (rest.length > maxChars) {
+      let cut = rest.lastIndexOf(' ', maxChars);
+      if (cut < maxChars / 2) cut = maxChars;
+      lines.push(rest.slice(0, cut).trimEnd());
+      rest = rest.slice(cut).trimStart();
+    }
+    lines.push(rest);
+  }
+  entry.details = lines;
 }
 
 function normalizeDistanceScale(curve) {
