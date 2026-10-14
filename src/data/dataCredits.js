@@ -160,6 +160,19 @@ export const DATA_CREDITS = [
       ' · Incident information: ' +
       '<a href="https://inciweb.wildfire.gov/" target="_blank" rel="noopener">InciWeb</a>',
   },
+  {
+    key: 'world-bank',
+    html:
+      'Country indicators: ' +
+      '<a href="https://data.worldbank.org" target="_blank" rel="noopener">World Bank Open Data</a> (CC BY 4.0)',
+  },
+  {
+    key: 'glottolog',
+    html:
+      'Languages: ' +
+      '<a href="https://glottolog.org" target="_blank" rel="noopener">Glottolog</a> 5.3, ' +
+      'Hammarstr\u00f6m, Forkel, Haspelmath &amp; Bank (CC BY 4.0)',
+  },
   OSM_CREDIT,
   OPENMAPTILES_CREDIT,
   {

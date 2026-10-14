@@ -27,5 +27,9 @@
   ["weather-lightning", "l"],
   ["weather-radar", "v"],
   ["weather-satellite", "o"],
-  ["wind", "k"]
+  ["wind", "k"],
+  ["news-tone", "6"],
+  ["indicators", "7"],
+  ["values", "8"],
+  ["languages", "9"]
 ]

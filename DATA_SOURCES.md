@@ -339,3 +339,30 @@ NOAA density imagery with the raw GLM product.
 ## In-app attribution
 
 The required Google Maps / Cesium credit renders on the on-globe credit line (`#cesium-credits`, bottom-left) and must stay visible — including in clean-view and recording modes (the whole line, logo + "Google Maps" + the "Data attribution" link, stays on screen; only the GEV panels/HUD fade). The layer-specific credits (adsb.lol, adsbdb, TeleGeography, OSM datacenters/dams/roads, NASA FIRMS, CelesTrak, USGS, City of Austin, Fintraffic, GBFS, Radio Browser, OpenSky, AISStream) are registered into the expandable **"Data attribution"** popover on that credit line via `viewer.creditDisplay.addStaticCredit(new Cesium.Credit(html, /* showOnScreen */ false))` — see `src/data/dataCredits.js`. When you add a new data source, add its license and attribution to this file **and** append an entry to `DATA_CREDITS` in `src/data/dataCredits.js` so it surfaces in the app.
+
+---
+
+## Ground View sources
+
+Layers in the Structure family. Aggregate country, language or region records only.
+
+### Country indicators (`indicators`)
+- **Source:** [World Bank Indicators API v2](https://api.worldbank.org/v2), keyless, fetched live from the browser. Indicators `SI.POV.GINI`, `SP.URB.TOTL.IN.ZS`, `IT.NET.USER.ZS`, `SL.TLF.CACT.FE.ZS`, `SL.UEM.1524.ZS`, `SP.POP.65UP.TO.ZS`; most recent non-empty value per country (`mrnev=1`); aggregates removed using the country metadata endpoint.
+- **Licence:** CC BY 4.0 (World Bank Open Data terms). Cached 24 h in memory.
+- **Retrieved for fixtures:** 2026-10-14.
+
+### Languages (`languages`)
+- **Source:** Glottolog 5.3 `languages_and_dialects_geo.csv` (https://glottolog.org/meta/downloads), level `language` with coordinates only; AES endangerment status joined from the `glottolog-cldf` `values.csv` (parameter `aes`, release 5.2.1 values).
+- **Licence:** CC BY 4.0. Citation: Hammarstrom, Forkel, Haspelmath and Bank, Glottolog, Max Planck Institute for Evolutionary Anthropology, https://glottolog.org.
+- **Build:** `node scripts/build-languages.mjs` writes `src/data/local_data/languages/languages.json` (about 0.5 MB). Retrieved 2026-10-14.
+
+### News tone (`news-tone`)
+- **Source:** [GDELT 2.0 event export](https://data.gdeltproject.org/gdeltv2/), the 96 fifteen-minute files covering the last 24 hours, aggregated server side by `server/providers/newsTone.js` (mean `AvgTone` per `ActionGeo_CountryCode`, weighted by `NumMentions`, FIPS codes mapped to ISO3). Only per-country aggregates leave the server.
+- **Licence:** GDELT is free to use with attribution to The GDELT Project. The DOC and GEO APIs were not used: they are limited to one request per five seconds and cannot return a per-country tone table.
+- **Meaning:** tone of news coverage about events located in a place, machine-scored. Not how people there feel.
+
+### Values (`values`)
+- **Source:** none bundled. `src/data/local_data/values/values.json` is a marked PLACEHOLDER with no rows. No citable country-level table of Inglehart-Welzel scores could be obtained at build time, so no numbers were invented. See `values.LICENSE.md` for the citation and for `scripts/build-values.mjs`, which loads a real table.
+
+### Country geometry (shared choropleth helper)
+- **Source:** the Natural Earth admin-0 pack already bundled for `adminBoundaries` (`src/data/local_data/natural_earth/countries.json`), public domain. Joined on ISO3; World Bank `XKX` and `PSE` are aliased to the pack's `KOS` and `PSX`.

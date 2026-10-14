@@ -607,6 +607,8 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled+options',
     optionOwner: 'flights',
   }),
+  Object.freeze({ id: 'indicators', token: '7', disposition: 'enabled-only' }),
+  Object.freeze({ id: 'languages', token: '9', disposition: 'enabled-only' }),
   Object.freeze({ id: 'local-dams', token: 'q', disposition: 'enabled-only' }),
   Object.freeze({
     id: 'local-datacenters',
@@ -630,6 +632,7 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     token: 'i',
     disposition: 'enabled-only',
   }),
+  Object.freeze({ id: 'news-tone', token: '6', disposition: 'enabled-only' }),
   Object.freeze({
     id: 'radio',
     token: 'r',
@@ -671,6 +674,7 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     optionOwner: 'traffic',
   }),
   Object.freeze({ id: 'transit', token: 'j', disposition: 'enabled-only' }),
+  Object.freeze({ id: 'values', token: '8', disposition: 'enabled-only' }),
   Object.freeze({
     id: 'weather-cyclones',
     token: 'y',
