@@ -46,14 +46,13 @@ export function gdacsRequests(nowMs) {
   ];
 }
 
-/** GDACS disaster alerts at `/api/crises`, cached for fifteen minutes. */
-export function crisesProxy({
+/** The cached GDACS loader shared by the proxy and the snapshot script. */
+export function createCrisesCore({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
 } = {}) {
   let cache = null;
   let inFlight = null;
-  const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 600 });
 
   async function loadOne(requestUrl) {
     const signal = AbortSignal.timeout(20_000);
@@ -132,6 +131,25 @@ export function crisesProxy({
       });
     }
   }
+
+  return { snapshot };
+}
+
+/** One fresh GDACS payload for the static snapshot; throws if GDACS is down. */
+export async function buildCrisesSnapshot(options = {}) {
+  const payload = await createCrisesCore(options).snapshot();
+  if (payload.unavailable)
+    throw new Error(payload.reason || 'crises_unavailable');
+  return payload;
+}
+
+/** GDACS disaster alerts at `/api/crises`, cached for fifteen minutes. */
+export function crisesProxy({
+  fetchImpl = (...args) => globalThis.fetch(...args),
+  now = () => Date.now(),
+} = {}) {
+  const { snapshot } = createCrisesCore({ fetchImpl, now });
+  const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 600 });
 
   async function handler(req, res) {
     const json = (status, value) => {

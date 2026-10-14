@@ -128,8 +128,8 @@ export function combineAggregates(aggregates, minEvents = MIN_EVENTS) {
     .sort((a, b) => a.iso3.localeCompare(b.iso3));
 }
 
-/** Fixed-endpoint GDELT tone aggregator with a rolling per-file cache. */
-export function newsToneProxy({
+/** The cached window aggregator shared by the proxy and the snapshot script. */
+export function createNewsToneCore({
   fetchImpl = fetch,
   now = () => Date.now(),
   timeoutMs = 60_000,
@@ -207,6 +207,25 @@ export function newsToneProxy({
     ]);
   }
 
+  return { acquire, last: () => result };
+}
+
+/** One complete tone table for the static snapshot; throws when no slice loads. */
+export async function buildNewsToneSnapshot(options = {}) {
+  const { acquire } = createNewsToneCore(options);
+  return acquire(new AbortController().signal);
+}
+
+/** Fixed-endpoint GDELT tone aggregator with a rolling per-file cache. */
+export function newsToneProxy({
+  fetchImpl = fetch,
+  now = () => Date.now(),
+  timeoutMs = 60_000,
+  gdelt = createGdeltSlices({ fetchImpl, now }),
+} = {}) {
+  const core = createNewsToneCore({ fetchImpl, now, timeoutMs, gdelt });
+  const { acquire } = core;
+
   async function handler(req, res) {
     const controller = new AbortController();
     res.once?.('close', () => controller.abort());
@@ -224,6 +243,7 @@ export function newsToneProxy({
     try {
       json(200, await acquire(controller.signal));
     } catch {
+      const result = core.last();
       if (result) return json(200, { ...result, stale: true });
       json(502, { error: 'news_tone_unavailable' });
     }

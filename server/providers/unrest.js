@@ -28,8 +28,8 @@ export function expectedSlices(nowMs) {
   return Array.from({ length: WINDOW_SLICES }, (_, i) => newest - i * SLICE_MS);
 }
 
-/** Rolling 24 h GDELT protest clusters at `/api/unrest`. */
-export function unrestProxy({
+/** The cached refresh-and-describe core shared by the proxy and the snapshot script. */
+export function createUnrestCore({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
   // Pass one shared hub to every GDELT proxy so a slice downloads once.
@@ -42,7 +42,6 @@ export function unrestProxy({
   let lastAttempt = -Infinity;
   let lastSuccess = null;
   let lastFailure = false;
-  const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 600 });
 
   async function loadSlice(ts) {
     if ((await gdelt.load(ts)) === 'missing') {
@@ -121,6 +120,35 @@ export function unrestProxy({
     };
   }
 
+  return {
+    refresh,
+    ensureRefresh,
+    describe,
+    hasData: () => gdelt.count('unrest') > 0,
+  };
+}
+
+/**
+ * One complete payload for the static snapshot: downloads the whole 24 h window
+ * (no first-load budget) and describes it. Pass a shared `gdelt` hub to reuse
+ * downloads with the news-tone snapshot.
+ */
+export async function buildUnrestSnapshot(options = {}) {
+  const core = createUnrestCore(options);
+  await core.refresh();
+  return core.describe();
+}
+
+/** Rolling 24 h GDELT protest clusters at `/api/unrest`. */
+export function unrestProxy({
+  fetchImpl = (...args) => globalThis.fetch(...args),
+  now = () => Date.now(),
+  gdelt = createGdeltSlices({ fetchImpl, now }),
+} = {}) {
+  const core = createUnrestCore({ fetchImpl, now, gdelt });
+  const { ensureRefresh, describe } = core;
+  const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 600 });
+
   async function handler(req, res) {
     const json = (status, value) => {
       if (res.destroyed) return;
@@ -140,7 +168,7 @@ export function unrestProxy({
     if (pending) {
       // The first request waits for the 24 h backfill, bounded; later ones
       // answer from memory while the refresh continues.
-      const first = gdelt.count('unrest') === 0;
+      const first = !core.hasData();
       await Promise.race([
         pending.catch(() => {}),
         new Promise((resolve) =>

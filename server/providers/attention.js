@@ -16,6 +16,91 @@ const MISSING_TTL_MS = 10 * 60_000;
 const RESPONSE_CAP = 512 * 1024;
 const MAX_ENTRIES = 256;
 
+const SNAPSHOT_ARTICLES = 60;
+const SNAPSHOT_CONCURRENCY = 6;
+const SNAPSHOT_DAYS_BACK = 2;
+
+const two = (n) => String(n).padStart(2, '0');
+
+/**
+ * Yesterday's top-article lists for every heartland edition, for the static
+ * snapshot. Each list is trimmed to its first articles (the browser keeps the
+ * top five after dropping utility pages). Falls back one more day when an
+ * edition has not published; an edition that fails is left out. Throws when
+ * no edition answers.
+ */
+export async function buildAttentionSnapshot({
+  fetchImpl = (...args) => globalThis.fetch(...args),
+  now = () => Date.now(),
+  heartlands = LANGUAGE_HEARTLANDS,
+} = {}) {
+  const nowMs = now();
+  const editions = {};
+  const queue = [...heartlands];
+  const failed = [];
+  async function one(h) {
+    for (let back = 1; back <= SNAPSHOT_DAYS_BACK; back++) {
+      const d = new Date(nowMs - back * 86_400_000);
+      const path = `${h.code}.wikipedia/all-access/${d.getUTCFullYear()}/${two(d.getUTCMonth() + 1)}/${two(d.getUTCDate())}`;
+      const signal = AbortSignal.timeout(20_000);
+      const response = await fetchImpl(`${API_ROOT}${path}`, {
+        signal,
+        redirect: 'error',
+        headers: {
+          'Api-User-Agent': API_USER_AGENT,
+          Accept: 'application/json',
+        },
+      });
+      if (response.status === 404) {
+        await response.body?.cancel();
+        continue;
+      }
+      if (!response.ok) {
+        await response.body?.cancel();
+        throw new Error('upstream_unavailable');
+      }
+      const payload = JSON.parse(
+        await readResponseTextCapped(response, RESPONSE_CAP, signal),
+      );
+      const item = payload?.items?.[0];
+      if (!item || !Array.isArray(item.articles))
+        throw new Error('invalid_attention_payload');
+      return {
+        items: [
+          {
+            year: item.year,
+            month: item.month,
+            day: item.day,
+            articles: item.articles.slice(0, SNAPSHOT_ARTICLES),
+          },
+        ],
+      };
+    }
+    throw new Error('no_pageview_data');
+  }
+  await Promise.all(
+    Array.from({ length: SNAPSHOT_CONCURRENCY }, async () => {
+      while (queue.length) {
+        const h = queue.shift();
+        try {
+          editions[h.code] = await one(h);
+        } catch {
+          failed.push(h.code);
+        }
+      }
+    }),
+  );
+  if (!Object.keys(editions).length) throw new Error('attention_unavailable');
+  return {
+    schemaVersion: 1,
+    source: 'Wikimedia pageviews',
+    attribution: 'Wikimedia Foundation',
+    fetchedAt: nowMs,
+    failed: failed.sort(),
+    editions,
+  };
+}
+
 /** Cached pass-through of daily top-article lists at `/api/attention/{code}/{yyyy}/{mm}/{dd}`. */
 export function attentionProxy({
   fetchImpl = (...args) => globalThis.fetch(...args),
