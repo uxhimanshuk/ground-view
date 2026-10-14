@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   GROUND_VIEW_DEFAULT_LAYER_IDS,
   applyGroundViewDefaults,
-} from './startupChrome.js';
+} from './groundViewDefaults.js';
 
 function managerSpy() {
   const calls = [];

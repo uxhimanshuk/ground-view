@@ -95,7 +95,7 @@ export async function createApplicationScene({
     viewer.scene.globe.show = true;
   }
 
-  loaderStatus.textContent = 'Initializing systems...';
+  loaderStatus.textContent = 'Preparing the globe...';
 
   const mapStackController = new MapController(viewer, {
     requestRender: governorRequestRender,

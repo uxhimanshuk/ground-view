@@ -110,7 +110,16 @@ test('renders ordinary layer rows without recreating a panel-hidden coordinator'
       querySelector(selector) {
         if (selector.startsWith('[data-layer-id="')) {
           const id = selector.slice(16, -2);
-          return this.children.find((child) => child.dataset.layerId === id) || null;
+          const byId = (node) => {
+            for (const child of node.children || []) {
+              if (child.dataset?.layerId === id) return child;
+              const found = byId(child);
+              if (found) return found;
+            }
+            return null;
+          };
+          // Rows may sit inside the collapsed original-layers section.
+          return byId(this);
         }
         const className = selector.startsWith('.') ? selector.slice(1) : '';
         const visit = (node) => {
@@ -2773,7 +2782,16 @@ function makeControlElement() {
     querySelector(selector) {
       if (selector.startsWith('[data-layer-id="')) {
         const id = selector.slice(16, -2);
-        return this.children.find((child) => child.dataset.layerId === id) || null;
+        const byId = (node) => {
+            for (const child of node.children || []) {
+              if (child.dataset?.layerId === id) return child;
+              const found = byId(child);
+              if (found) return found;
+            }
+            return null;
+          };
+          // Rows may sit inside the collapsed original-layers section.
+          return byId(this);
       }
       const className = selector.startsWith('.') ? selector.slice(1) : '';
       const visit = (node) => {
