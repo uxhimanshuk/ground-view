@@ -1,10 +1,10 @@
 import { createSurfaceKeyboard } from './ui/surfaceKeyboard.js';
 
-// First-run mission launcher.
+// First-run launcher.
 //
-// The map deliberately does not auto-enable live feeds on every visit: doing so
-// would spend optional API quotas, surprise returning operators, and fight share
-// links. A new visitor instead gets one compact, explicit choice after startup.
+// A fresh visitor starts with the Ground View defaults (see
+// applyGroundViewDefaults in app/startupChrome.js). This launcher then offers
+// one compact, explicit choice, and never fights a share link.
 //
 // SHOW POLICY (owner ruling, 2026-08-23). The launcher is NOT one-shot. A new
 // operator needs the map explained more than once, so it returns every fresh
@@ -26,28 +26,6 @@ export const FIRST_RUN_STORAGE_KEY = 'gev:first-run-mission:v1';
 /** Per-session dismissal. Written by every close path; scoped to sessionStorage. */
 export const FIRST_RUN_SESSION_KEY = 'gev:first-run-mission-session:v1';
 
-/**
- * Owner-selectable name for the fires/quakes mission. Flip this ONE constant to
- * re-label the tile; the alternates are pre-written so the choice is a taste
- * call at review time, not an edit.
- * @type {'ENVIRONMENTAL'|'EARTH_WATCH'|'ACTIVE_EVENTS'}
- */
-export const ENVIRONMENTAL_LABEL_CHOICE = 'ENVIRONMENTAL';
-
-const ENVIRONMENTAL_LABELS = Object.freeze({
-  ENVIRONMENTAL: Object.freeze({ title: 'ENVIRONMENTAL' }),
-  EARTH_WATCH: Object.freeze({ title: 'EARTH WATCH' }),
-  ACTIVE_EVENTS: Object.freeze({ title: 'ACTIVE EVENTS' }),
-});
-
-/**
- * @param {string} [choice]
- * @returns {{title: string}} The label set the constant above selects.
- */
-export function environmentalLabel(choice = ENVIRONMENTAL_LABEL_CHOICE) {
-  return ENVIRONMENTAL_LABELS[choice] || ENVIRONMENTAL_LABELS.ENVIRONMENTAL;
-}
-
 /*
  * MISSION → APP STATE, AND WHAT IT IS ALLOWED TO PERSIST
  * ─────────────────────────────────────────────────────────────────────────────
@@ -59,10 +37,10 @@ export function environmentalLabel(choice = ENVIRONMENTAL_LABEL_CHOICE) {
  *
  *   TOUCHED, DURABLE      layer enables for the mission's OWN layers, at
  *                         `origin: 'user'` — identical to clicking those rows.
- *                         Choosing ENVIRONMENTAL *is* choosing those layers.
- *   TOUCHED, DURABLE      the Context panel reveal, but only for the two
- *                         Context missions, exactly as the visible Contacts /
- *                         Space Missions tabs do it. The globe missions open no
+ *                         Choosing GLOBAL CONTEXT *is* choosing those layers.
+ *   TOUCHED, DURABLE      the Context panel reveal, but only for a Context
+ *                         mission (none ships in the launcher now, the kind is
+ *                         kept for the Context rail). The globe missions open no
  *                         panel at all — nothing there needs explaining, and a
  *                         panel-collapse write is a pref nobody chose.
  *   TOUCHED, SESSION      the camera. Never persisted by anything.
@@ -82,40 +60,36 @@ export function environmentalLabel(choice = ENVIRONMENTAL_LABEL_CHOICE) {
  *                         `_setModels3dMode`, which default to origin 'user' and
  *                         would persist a 3D choice nobody made.
  *
- * The two Context missions deliberately reuse `styleManager.setContextMode`, the
+ * A Context mission would reuse `styleManager.setContextMode`, the
  * same facade the visible tabs and voice use, so Contacts detection ownership,
  * layer isolation and rollback stay in exactly one place.
  */
 
 /** @type {Readonly<Record<string, object>>} */
 export const FIRST_RUN_MISSIONS = Object.freeze({
-  contacts: Object.freeze({
-    kind: 'context',
-    contextMode: 'contacts',
-    busyText: 'Starting live contacts…',
-  }),
-  'space-missions': Object.freeze({
-    kind: 'context',
-    contextMode: 'space-missions',
-    busyText: 'Opening space missions…',
-  }),
-  environmental: Object.freeze({
+  // Ground View's first-visit choices. Every mission is aggregate: countries,
+  // regions and clustered events, never individuals.
+  'global-context': Object.freeze({
     kind: 'globe',
-    // Live USGS earthquakes AND NASA FIRMS active fires. The launcher optimizes
-    // for the FULLY CONFIGURED experience (owner ruling, 2026-08-23): the tile
-    // promises both, so it turns on both, and the subcopy in index.html says so.
-    //
-    // Keyless, FIRMS is honest where it counts — its own layer row reads
-    // "UNAVAILABLE · NASA FIRMS · LIVE · KEY REQUIRED", and the quakes half of
-    // the tile still delivers in full. What is NOT honest is the GLOBAL status
-    // chip, which has no key-required terminal state and folds that row into
-    // "LOAD FAILED". That aggregation is the defect, not this preset: fixing it
-    // means a KEY REQUIRED terminal state in src/loadingFeedback.js, a state
-    // machine shared by every layer and not a thing to refactor the night
-    // before a launch. LEDGERED post-launch. Until it lands, keyless visitors
-    // are judged on the layer row, which tells them the truth.
-    layerIds: Object.freeze(['earthquakes', 'local-firms']),
-    busyText: 'Scanning active events…',
+    // Pulse and Flows together, with the indicators choropleth beneath them.
+    layerIds: Object.freeze([
+      'unrest',
+      'attention',
+      'crises',
+      'refugees',
+      'indicators',
+    ]),
+    busyText: 'Staging global context…',
+  }),
+  pulse: Object.freeze({
+    kind: 'globe',
+    layerIds: Object.freeze(['unrest', 'attention', 'crises']),
+    busyText: 'Reading the pulse…',
+  }),
+  flows: Object.freeze({
+    kind: 'globe',
+    layerIds: Object.freeze(['refugees', 'migrant-stock']),
+    busyText: 'Tracing migration flows…',
   }),
   explore: Object.freeze({ kind: 'none' }),
 });
@@ -353,14 +327,6 @@ export function initFirstRunExperience({
     root.remove();
     return null;
   }
-
-  // The tile name is owner-switchable from one constant, so paint it from the
-  // module rather than trusting the markup to have been edited to match.
-  const environmentalTitle = root.querySelector(
-    '[data-first-run-environmental-title]',
-  );
-  if (environmentalTitle)
-    environmentalTitle.textContent = environmentalLabel().title;
 
   const status = root.querySelector('[data-first-run-status]');
   const suppressBox = root.querySelector('[data-first-run-suppress]');

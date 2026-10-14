@@ -381,3 +381,16 @@ body.scene-playback-mode #first-run-launcher {
     scroll-behavior: auto;
   }
 }
+
+.first-run-credit {
+  margin-top: 0.35rem;
+  color: rgba(199, 225, 231, 0.5);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  line-height: 1.35;
+}
+
+.first-run-credit a {
+  color: inherit;
+  text-decoration: underline;
+}

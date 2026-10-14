@@ -47,6 +47,24 @@ export function flyToPreset(viewer, presetName, duration = 3.0) {
 }
 
 /**
+ * Ground View opens on the whole globe, since its layers are country-scale.
+ * @returns {Function} Cancels the startup view (nothing is pending).
+ */
+export function startOnGlobe(viewer) {
+  viewer.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(15, 20, 22_000_000),
+    orientation: {
+      heading: Cesium.Math.toRadians(0),
+      pitch: Cesium.Math.toRadians(-90),
+      roll: 0.0,
+    },
+  });
+  return () => {
+    if (!viewer.isDestroyed()) viewer.camera.cancelFlight();
+  };
+}
+
+/**
  * Set camera to Austin on load with a cinematic fly-in.
  * @returns {Function} Cancels the pending or active startup flight.
  */

@@ -92,6 +92,12 @@ export function hideOsmCredit(viewer, owner) {
 }
 
 export const DATA_CREDITS = [
+  {
+    key: 'gods-eye-view',
+    html:
+      'Built on <a href="https://github.com/bilawalsidhu/gods-eye-view" target="_blank" rel="noopener">God\'s Eye View</a> ' +
+      'by Bilawal Sidhu and Sameh Khamis (MIT)',
+  },
   // ── Live sources ────────────────────────────────────────────────
   {
     key: 'opensky',
