@@ -4,7 +4,7 @@ import { applicationServices } from './services/application.js';
  * @description Intelligence HUD Overlay — NRO/NGA Satellite Aesthetic.
  *
  * Renders authentic reconnaissance metadata over the Cesium canvas:
- * classification banners, live MGRS/lat-lon coordinates, sensor metrics
+ * classification banners, live lat/lon coordinates, sensor metrics
  * (GSD, NIIRS, ONA), timestamps, and orbital data — all updating in
  * real-time at configurable cadences.
  *
@@ -15,7 +15,7 @@ import { applicationServices } from './services/application.js';
  */
 
 import * as Cesium from 'cesium';
-import { forward as toMGRS } from 'mgrs';
+import { composeGroundViewCounts } from './hudGroundViewCounts.js';
 import { CITY_POIS } from './locations.js';
 import { composeLocalityTag } from './hudLocality.js';
 import {
@@ -85,7 +85,7 @@ const NEARBY_POINTS = Object.values(CITY_POIS).flatMap((city) =>
 /**
  * Full-screen intelligence HUD overlay rendered on top of the Cesium canvas.
  *
- * Displays classification banners, MGRS/lat-lon readouts, sensor metrics
+ * Displays classification banners, lat/lon readouts, sensor metrics
  * (GSD, NIIRS, off-nadir angle), sun elevation, orbital metadata, and a
  * rolling semantic summary line. All values derive from the live camera
  * position and update on independent timer cadences.
@@ -218,33 +218,21 @@ export class IntelHUD {
       <div class="hud-corner hud-bottom-left">
         <div class="hud-bracket">└</div>
         <div class="hud-content">
-          <div id="hud-mgrs">MGRS: ---</div>
           <div id="hud-latlon">--°--'--"N ---°--'--"W</div>
         </div>
       </div>
 
       <div class="hud-corner hud-bottom-right">
         <div class="hud-content" style="text-align:right">
-          <div id="hud-gsd">GSD: --m  NIIRS: --</div>
+          <div id="hud-gsd" class="hud-gv-counts"></div>
           <div id="hud-alt">ALT: --m   SUN: --° EL</div>
-          <div id="hud-ais-vessel" class="hud-ais-vessel">AIS: --</div>
+          <div id="hud-ais-vessel" class="hud-ais-vessel"></div>
         </div>
         <div class="hud-bracket">┘</div>
       </div>
 
-      <div class="hud-edge hud-left-edge">
-        <div id="hud-coll">COLL: --:--:--Z</div>
-        <div id="hud-ona">ONA: --°</div>
-      </div>
-
-      <div class="hud-edge hud-right-edge">
-        <div>BAND: PAN</div>
-        <div>BITS: 11</div>
-        <div>LVL: 1A</div>
-      </div>
-
       <div class="hud-bottom-bar">
-        <span id="hud-bottom-line">LAT: --  LON: --  MGRS: ---</span>
+        <span id="hud-bottom-line">LAT: --  LON: --</span>
       </div>
     `;
     this._el.dataset.variant = this._variant;
@@ -332,9 +320,9 @@ export class IntelHUD {
 
   /**
    * Derive all camera-based telemetry and push values to the DOM.
-   * Reads the viewer camera's cartographic position and computes MGRS,
-   * lat/lon DMS, GSD, NIIRS, sun elevation, off-nadir angle, and
-   * collection timestamp. Stores results in {@link _latestMetrics}.
+   * Reads the viewer camera's cartographic position and computes
+   * lat/lon DMS, altitude, sun elevation and the live Ground View counts.
+   * Stores results in {@link _latestMetrics}.
    */
   _updateCameraData() {
     const camera = this.viewer.camera;
@@ -346,42 +334,26 @@ export class IntelHUD {
     const altM = cartographic.height;
     const latDMS = this._toDMS(latDeg, 'lat');
     const lonDMS = this._toDMS(lonDeg, 'lon');
-    let mgrsLabel = '---';
-
-    // MGRS
-    try {
-      const mgrsStr = toMGRS([lonDeg, latDeg], 4); // 4 = 10m precision
-      // Format: 18SUJ23370716 → 18S UJ 2337 0716
-      const formatted = this._formatMGRS(mgrsStr);
-      mgrsLabel = formatted;
-      const el = document.getElementById('hud-mgrs');
-      if (el) el.textContent = `MGRS: ${formatted}`;
-    } catch {
-      const el = document.getElementById('hud-mgrs');
-      if (el) el.textContent = 'MGRS: ---';
-    }
 
     // Lat/Lon DMS
     const llEl = document.getElementById('hud-latlon');
     if (llEl) llEl.textContent = `${latDMS} ${lonDMS}`;
     const bottomEl = document.getElementById('hud-bottom-line');
     if (bottomEl) {
-      bottomEl.textContent = `MGRS: ${mgrsLabel}  LAT: ${latDMS}  LON: ${lonDMS}`;
+      bottomEl.textContent = `LAT: ${latDMS}  LON: ${lonDMS}`;
     }
 
-    // GSD (Ground Sample Distance): approximate resolution in meters per pixel
-    // derived from camera altitude. NIIRS (National Imagery Interpretability
-    // Rating Scale): 0-9 quality rating computed via the General Image Quality
-    // Equation (GIQE) simplified form: NIIRS = 10.25 - 3.32 * log10(GSD_inches).
+    // Ground sample distance stays in the metrics for the view band maths; it
+    // is no longer printed. The corner now shows live Ground View counts.
     const gsd = Math.max(0.01, altM * 0.000375);
-    const gsdInches = gsd * 39.37;
-    const niirs = Math.max(
-      0,
-      Math.min(9, 10.25 - 3.32 * Math.log10(gsdInches)),
-    );
-    const gsdEl = document.getElementById('hud-gsd');
-    if (gsdEl)
-      gsdEl.textContent = `GSD: ${gsd.toFixed(2)}m  NIIRS: ${niirs.toFixed(1)}`;
+    this._tickCount = (this._tickCount || 0) + 1;
+    if (this._tickCount % 4 === 1) {
+      const countsEl = document.getElementById('hud-gsd');
+      if (countsEl)
+        countsEl.textContent = composeGroundViewCounts(
+          this._dataManager?.getAll?.() || [],
+        );
+    }
 
     // Altitude — reported as height above MEAN SEA LEVEL. `altM` is the raw
     // ellipsoidal camera height, which reads far below zero wherever the geoid
@@ -395,22 +367,10 @@ export class IntelHUD {
     if (altEl)
       altEl.textContent = `ALT: ${Math.round(altMslM)}m   SUN: ${sunEl.toFixed(1)}° EL`;
 
-    // Collection timestamp
-    const collEl = document.getElementById('hud-coll');
-    if (collEl) {
-      const now = new Date();
-      const h = String(now.getUTCHours()).padStart(2, '0');
-      const m = String(now.getUTCMinutes()).padStart(2, '0');
-      const s = String(now.getUTCSeconds()).padStart(2, '0');
-      collEl.textContent = `COLL: ${h}:${m}:${s}Z`;
-    }
-
     // Off-nadir angle (ONA): camera pitch of -90 deg is nadir (straight down),
     // so ONA = 90 + pitch gives 0 at nadir and increases toward the horizon.
     const pitchDeg = Cesium.Math.toDegrees(camera.pitch);
     const ona = Math.max(0, 90 + pitchDeg);
-    const onaEl = document.getElementById('hud-ona');
-    if (onaEl) onaEl.textContent = `ONA: ${ona.toFixed(1)}°`;
 
     // `altM` stays the raw ellipsoidal camera height the sensor model reads
     // (GSD/NIIRS, view band). `altMslM` is the ADDITIVE display datum — the
@@ -420,6 +380,7 @@ export class IntelHUD {
       lonDeg,
       altM,
       altMslM,
+      gsd,
       sunEl,
       ona,
     };
@@ -662,7 +623,7 @@ export class IntelHUD {
     const provenance = hudTelemetryProvenanceTag(
       this._dataManager?.getAll?.() || [],
     );
-    const line = `${modeLabel} ${band} ${localityTag} | ${region} | ALT ${altTag} | WINDOW ${winTag} | SUN ${m.sunEl.toFixed(0)}° | ONA ${m.ona.toFixed(0)}° | ${localTag}`;
+    const line = `${modeLabel} ${band} ${localityTag} | ${region} | ALT ${altTag} | WINDOW ${winTag} | SUN ${m.sunEl.toFixed(0)}° | ${localTag}`;
     return provenance ? `${line} | ${provenance}` : line;
   }
 
