@@ -63,7 +63,7 @@ const reservationRows = productionRows.filter(
 );
 const BASELINE_RESERVATIONS = parseLayerStateTokenReservations(reservationRows);
 const FAMILY_REGISTRY_ENTRY = new RegExp(
-  `\\n  Object\\.freeze\\(\\{\\s*id: '[a-z0-9-]+',\\s*token: '(?:${[...FAMILY_TOKENS].join('|')})',\\s*disposition: 'enabled-only',?\\s*\\}\\),`,
+  `\\n  Object\\.freeze\\(\\{\\s*id: '[a-z0-9-]+',\\s*token: '(?:${[...FAMILY_TOKENS].join('|')})',\\s*disposition: '[a-z+-]+',?\\s*(?:optionOwner: '[a-z0-9-]+',?\\s*)?\\}\\),`,
   'g',
 );
 

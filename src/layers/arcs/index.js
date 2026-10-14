@@ -75,6 +75,8 @@ export function createArcLayer({
   let meta = { year: null, asOf: null, extra: null };
   let skipped = { invalid: 0, self: 0, noCentroid: 0 };
   let isolated = null;
+  // An isolation asked for before the country table has loaded.
+  let pendingIso = null;
   let selectedArcId = null;
   let shown = [];
   let lastUpdate = null;
@@ -271,6 +273,11 @@ export function createArcLayer({
           asOf: snapshot.asOf ?? null,
           extra: snapshot.extra ?? null,
         };
+        if (pendingIso) {
+          const wanted = pendingIso;
+          pendingIso = null;
+          if (table.has(wanted)) isolated = table.resolve({ iso3: wanted });
+        }
         if (isolated && !table.has(isolated)) isolated = null;
         redraw();
         if (isolated) showCountryCard(isolated);
@@ -303,6 +310,7 @@ export function createArcLayer({
       arcs = [];
       shown = [];
       isolated = null;
+      pendingIso = null;
       selectedArcId = null;
       lastUpdate = null;
       lastError = null;
@@ -312,6 +320,30 @@ export function createArcLayer({
     /** Isolate one country's flows (ISO3), or pass null to show the top set. */
     isolateCountry(iso3) {
       if (enabled) isolate(iso3);
+    },
+
+    /** Share-link and scene options: `{ isolated: ISO3 | null }`. */
+    setParams(params = {}) {
+      if (params.isolated === undefined) return true;
+      const code = params.isolated
+        ? String(params.isolated).toUpperCase()
+        : null;
+      if (code && !/^[A-Z]{3}$/.test(code)) return false;
+      if (!table) {
+        pendingIso = code;
+        return true;
+      }
+      if (enabled) isolate(code);
+      else {
+        isolated =
+          code && table.has(code) ? table.resolve({ iso3: code }) : null;
+        redraw();
+      }
+      return true;
+    },
+
+    getParams() {
+      return { isolated: isolated ?? pendingIso };
     },
 
     /** Change the arc cap and redraw. */

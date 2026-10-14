@@ -154,6 +154,22 @@ function trackingIdOption(key, token, defaultValue = null) {
   });
 }
 
+/** An ISO 3166 alpha-3 country code: held upper case, written lower case. */
+function iso3Option(key, token) {
+  const parse = (candidate) => {
+    const raw = typeof candidate === 'string' ? candidate.trim() : '';
+    return /^[A-Za-z]{3}$/.test(raw) ? raw.toUpperCase() : null;
+  };
+  return Object.freeze({
+    key,
+    token,
+    defaultValue: null,
+    normalize: parse,
+    encode: (value) => value.toLowerCase(),
+    decode: parse,
+  });
+}
+
 function stringOption(key, token, defaultValue) {
   return Object.freeze({
     key,
@@ -296,7 +312,47 @@ function imageryPinOption(key, token) {
   });
 }
 
+const ARC_OPTIONS = Object.freeze([iso3Option('isolated', 'i')]);
+
 const OPTION_GROUPS = Object.freeze({
+  indicators: Object.freeze([
+    enumOption(
+      'indicator',
+      'i',
+      'SI.POV.GINI',
+      [
+        'SI.POV.GINI',
+        'SP.URB.TOTL.IN.ZS',
+        'IT.NET.USER.ZS',
+        'SL.TLF.CACT.FE.ZS',
+        'SL.UEM.1524.ZS',
+        'SP.POP.65UP.TO.ZS',
+      ],
+      {
+        'SI.POV.GINI': 'g',
+        'SP.URB.TOTL.IN.ZS': 'u',
+        'IT.NET.USER.ZS': 'n',
+        'SL.TLF.CACT.FE.ZS': 'w',
+        'SL.UEM.1524.ZS': 'y',
+        'SP.POP.65UP.TO.ZS': 'a',
+      },
+    ),
+  ]),
+  values: Object.freeze([
+    enumOption(
+      'dimension',
+      'd',
+      'tradSecular',
+      ['tradSecular', 'survSelfExpr'],
+      {
+        tradSecular: 't',
+        survSelfExpr: 's',
+      },
+    ),
+  ]),
+  refugees: ARC_OPTIONS,
+  'migrant-stock': ARC_OPTIONS,
+  remittances: ARC_OPTIONS,
   traffic: Object.freeze([
     enumOption('roadMode', 'r', null, ['tomtom', 'osm', 'hybrid'], {
       tomtom: 't',
@@ -609,7 +665,12 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled+options',
     optionOwner: 'flights',
   }),
-  Object.freeze({ id: 'indicators', token: '7', disposition: 'enabled-only' }),
+  Object.freeze({
+    id: 'indicators',
+    token: '7',
+    disposition: 'enabled+options',
+    optionOwner: 'indicators',
+  }),
   Object.freeze({ id: 'languages', token: '9', disposition: 'enabled-only' }),
   Object.freeze({ id: 'local-dams', token: 'q', disposition: 'enabled-only' }),
   Object.freeze({
@@ -621,7 +682,8 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   Object.freeze({
     id: 'migrant-stock',
     token: '01',
-    disposition: 'enabled-only',
+    disposition: 'enabled+options',
+    optionOwner: 'migrant-stock',
   }),
   Object.freeze({
     id: 'military',
@@ -652,11 +714,17 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled+options',
     optionOwner: 'recent-imagery',
   }),
-  Object.freeze({ id: 'refugees', token: '00', disposition: 'enabled-only' }),
+  Object.freeze({
+    id: 'refugees',
+    token: '00',
+    disposition: 'enabled+options',
+    optionOwner: 'refugees',
+  }),
   Object.freeze({
     id: 'remittances',
     token: '02',
-    disposition: 'enabled-only',
+    disposition: 'enabled+options',
+    optionOwner: 'remittances',
   }),
   Object.freeze({
     id: 'rocket-launches',
@@ -688,7 +756,12 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   }),
   Object.freeze({ id: 'transit', token: 'j', disposition: 'enabled-only' }),
   Object.freeze({ id: 'unrest', token: '3', disposition: 'enabled-only' }),
-  Object.freeze({ id: 'values', token: '8', disposition: 'enabled-only' }),
+  Object.freeze({
+    id: 'values',
+    token: '8',
+    disposition: 'enabled+options',
+    optionOwner: 'values',
+  }),
   Object.freeze({
     id: 'weather-cyclones',
     token: 'y',

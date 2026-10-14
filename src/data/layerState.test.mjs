@@ -202,7 +202,18 @@ function encode(state) {
 
 // The Ground View families own pre-allocated tokens; the allocation scenarios
 // below run from the ledger without them so they hold as families land.
-const FAMILY_TOKENS = new Set(['3', '4', '5', '6', '7', '8', '9', '00', '01', '02']);
+const FAMILY_TOKENS = new Set([
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '00',
+  '01',
+  '02',
+]);
 const BASELINE_RESERVATIONS = Object.fromEntries(
   Object.entries(LAYER_STATE_TOKEN_RESERVATIONS).filter(
     ([, token]) => !FAMILY_TOKENS.has(token),
@@ -2801,4 +2812,46 @@ test('explicit provider switches reach durable state without adopting unrelated 
   } finally {
     coordinator.destroy();
   }
+});
+
+test('indicator, value dimension and flow isolation round-trip through a share link', () => {
+  const state = normalizeLayerState({
+    enabledLayerIds: ['indicators', 'values', 'refugees', 'remittances'],
+    options: {
+      indicators: { indicator: 'IT.NET.USER.ZS' },
+      values: { dimension: 'survSelfExpr' },
+      refugees: { isolated: 'tur' },
+      remittances: { isolated: 'IND' },
+    },
+  });
+  const query = encode(state);
+  const restored = decodeLayerStateParams(new URLSearchParams(query));
+  assert.deepEqual(restored.options.indicators, {
+    indicator: 'IT.NET.USER.ZS',
+  });
+  assert.deepEqual(restored.options.values, { dimension: 'survSelfExpr' });
+  assert.deepEqual(restored.options.refugees, { isolated: 'TUR' });
+  assert.deepEqual(restored.options.remittances, { isolated: 'IND' });
+  assert.deepEqual(restored.options['migrant-stock'], { isolated: null });
+  assert.match(query, /lo=[^&]*7\.i\.n/);
+  assert.match(query, /00\.i\.tur/);
+});
+
+test('default picker choices stay out of the share link and bad codes fall back', () => {
+  const query = encode(
+    normalizeLayerState({
+      enabledLayerIds: ['indicators', 'values'],
+      options: {},
+    }),
+  );
+  assert.doesNotMatch(query, /(?:^|[_&=])[78]\.[id]\./);
+  const bad = decodeLayerStateParams(new URLSearchParams('v=2&l=7.8&lo=7.i.z'));
+  assert.equal(bad?.options.indicators.indicator, 'SI.POV.GINI');
+  assert.equal(
+    normalizeLayerState({
+      enabledLayerIds: ['refugees'],
+      options: { refugees: { isolated: 'TURKEY' } },
+    }).options.refugees.isolated,
+    null,
+  );
 });

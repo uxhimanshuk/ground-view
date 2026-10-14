@@ -151,6 +151,19 @@ test('country isolation shows only that country and publishes a card', async () 
   assert.equal(layer.getLodDiagnostics().arcsShown, 2);
 });
 
+test('an isolation asked for before the data loads applies once it has', async () => {
+  const { layer, viewer } = harness({ records });
+  layer.init(viewer);
+  layer.enable(viewer);
+  assert.equal(layer.setParams({ isolated: 'deu' }), true);
+  assert.deepEqual(layer.getParams(), { isolated: 'DEU' });
+  await layer.update(viewer);
+  assert.equal(layer.getSelection().isolated, 'DEU');
+  assert.equal(layer.setParams({ isolated: 'not-a-code' }), false);
+  layer.setParams({ isolated: null });
+  assert.deepEqual(layer.getParams(), { isolated: null });
+});
+
 test('disable keeps loaded data, hides, and a later update redraws', async () => {
   const { layer, viewer, primitives } = harness({ records });
   layer.init(viewer);
