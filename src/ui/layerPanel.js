@@ -78,6 +78,30 @@ const PANEL_GROUPS = [
     ids: ['directions', 'radio'],
   },
 ];
+// The Ground View families render at the top level; every other group is
+// folded into one collapsible "From God's Eye View" section.
+const GROUND_VIEW_GROUPS = new Set(['Pulse', 'Flows', 'Structure']);
+const LEGACY_SECTION_TITLE = "From God's Eye View";
+const LEGACY_SECTION_SUBLABEL =
+  'The original layers: vehicles, cameras, infrastructure, weather.';
+const LEGACY_OPEN_STORAGE_KEY = 'gev:legacy-layers-open';
+
+function readLegacyOpen() {
+  try {
+    return globalThis.localStorage?.getItem(LEGACY_OPEN_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeLegacyOpen(open) {
+  try {
+    globalThis.localStorage?.setItem(LEGACY_OPEN_STORAGE_KEY, open ? '1' : '0');
+  } catch {
+    // Storage can be blocked; the section just starts closed next time.
+  }
+}
+
 const PANEL_ORDER = PANEL_GROUPS.flatMap(({ label, ids }) =>
   ids.map((id) => ({ id, label })),
 );
@@ -223,15 +247,44 @@ export class LayerPanel {
           (PANEL_POSITIONS.get(b.id) ?? PANEL_ORDER.length),
       );
     let previousGroup = '';
+    let target = this._toggleContainer;
+    let legacyDetails = null;
     for (const layer of layers) {
       if (!layer.showInTogglePanel) continue;
       const group =
         PANEL_ORDER[PANEL_POSITIONS.get(layer.id)]?.label ?? 'Other layers';
+      if (!GROUND_VIEW_GROUPS.has(group) && !legacyDetails) {
+        legacyDetails = document.createElement('details');
+        legacyDetails.className = 'data-layer-legacy';
+        const summary = document.createElement('summary');
+        summary.className = 'data-layer-legacy-summary';
+        const title = document.createElement('span');
+        title.className = 'data-layer-legacy-title';
+        title.textContent = LEGACY_SECTION_TITLE;
+        const sub = document.createElement('span');
+        sub.className = 'data-layer-legacy-sub';
+        sub.textContent = LEGACY_SECTION_SUBLABEL;
+        summary.appendChild(title);
+        summary.appendChild(sub);
+        legacyDetails.appendChild(summary);
+        legacyDetails.open = readLegacyOpen();
+        // Persist only the viewer's own choice, not the auto-open below. The
+        // default action flips `open` after the click, so store the inverse.
+        this._bind(summary, 'click', () =>
+          writeLegacyOpen(!legacyDetails.open),
+        );
+        this._toggleContainer.appendChild(legacyDetails);
+        target = legacyDetails;
+        previousGroup = '';
+      }
+      // A layer that is on must stay visible, so it opens the section.
+      if (legacyDetails && !GROUND_VIEW_GROUPS.has(group) && layer.enabled)
+        legacyDetails.open = true;
       if (group && group !== previousGroup) {
         const heading = document.createElement('h3');
         heading.className = 'data-layer-group-heading';
         heading.textContent = group;
-        this._toggleContainer.appendChild(heading);
+        target.appendChild(heading);
       }
       previousGroup = group;
       const row = document.createElement('div');
@@ -350,7 +403,7 @@ export class LayerPanel {
         }
       }
 
-      this._toggleContainer.appendChild(row);
+      target.appendChild(row);
     }
     this._refreshWeatherPanel();
   }

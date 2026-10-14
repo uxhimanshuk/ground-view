@@ -258,3 +258,75 @@ test('an omitted source is visibly unavailable and cannot be toggled on', async 
     'an active layer can always be switched off',
   );
 });
+
+test('original groups fold into one closed "From God\'s Eye View" section, opened by an enabled layer', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const { railFixture } = await import('./railTestFixture.mjs');
+  const run = (enabledIds) => {
+    const f = railFixture();
+    const previousDocument = globalThis.document;
+    globalThis.document = f.document;
+    const ids = [
+      'unrest',
+      'refugees',
+      'indicators',
+      'flights',
+      'wind',
+      'other',
+    ];
+    const layers = ids.map((id) => ({
+      id,
+      name: id,
+      icon: '*',
+      source: 'Source',
+      enabled: enabledIds.includes(id),
+      showInTogglePanel: true,
+      stats: {},
+    }));
+    const panel = new LayerPanel({
+      getLayers: () => layers,
+      isEnabled: (id) => enabledIds.includes(id),
+      setEnabled: () => {},
+      setLayerParams: () => {},
+      hasRowControls: () => false,
+      subscribeRowControls: () => {},
+      getRowControls: () => null,
+    });
+    panel.mount(f.container);
+    const details = f.find((n) => n.tagName === 'DETAILS');
+    const result = { f, details, panel, previousDocument };
+    return result;
+  };
+  const closed = run(['unrest']);
+  try {
+    assert.ok(closed.details, 'a details element holds the original layers');
+    assert.equal(closed.details.open, false);
+    const summary = closed.details.children[0];
+    assert.equal(summary.tagName, 'SUMMARY');
+    assert.equal(summary.children[0].textContent, "From God's Eye View");
+    assert.equal(
+      summary.children[1].textContent,
+      'The original layers: vehicles, cameras, infrastructure, weather.',
+    );
+    const inside = (id) =>
+      closed.f.find((n) => n.dataset.layerId === id, closed.details);
+    for (const id of ['flights', 'wind', 'other']) assert.ok(inside(id), id);
+    for (const id of ['unrest', 'refugees', 'indicators'])
+      assert.equal(inside(id), null, `${id} stays at the top level`);
+    assert.ok(closed.f.find((n) => n.dataset.layerId === 'unrest'));
+  } finally {
+    closed.panel.destroy();
+    globalThis.document = closed.previousDocument;
+  }
+  const opened = run(['flights']);
+  try {
+    assert.equal(
+      opened.details.open,
+      true,
+      'an enabled original layer opens it',
+    );
+  } finally {
+    opened.panel.destroy();
+    globalThis.document = opened.previousDocument;
+  }
+});
