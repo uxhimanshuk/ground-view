@@ -239,7 +239,7 @@ export function rememberFirstRunSessionDismissed(sessionStorageRef) {
  */
 export async function runFirstRunChoice(
   choice,
-  { setContextMode, setLayerEnabled, flyToGlobe },
+  { setContextMode, setLayerEnabled, flyToGlobe, getLayerState },
 ) {
   const mission = FIRST_RUN_MISSIONS[choice];
   if (!mission) return { ok: false, choice };
@@ -254,20 +254,62 @@ export async function runFirstRunChoice(
   const flight = Promise.resolve()
     .then(() => flyToGlobe())
     .catch(() => null);
+  // A layer that cannot load (key-gated, or its source is down) is SKIPPED, not
+  // a mission failure: the mission still enables every layer that can load.
+  const readState = (layerId) => {
+    try {
+      return getLayerState?.(layerId) || null;
+    } catch {
+      return null;
+    }
+  };
+  const gated = (state) =>
+    Boolean(state) &&
+    (state.keyRequired === true || state.unavailable === true);
   const outcomes = await Promise.all(
     mission.layerIds.map(async (layerId) => {
+      if (gated(readState(layerId))) return { layerId, skipped: true };
+      let ok = false;
       try {
-        return { layerId, ok: (await setLayerEnabled(layerId)) !== false };
+        ok = (await setLayerEnabled(layerId)) !== false;
       } catch {
-        return { layerId, ok: false };
+        ok = false;
       }
+      if (!ok && gated(readState(layerId))) return { layerId, skipped: true };
+      return { layerId, ok };
     }),
   );
   await flight;
   const failedLayerIds = outcomes
-    .filter((entry) => !entry.ok)
+    .filter((entry) => !entry.skipped && !entry.ok)
     .map((entry) => entry.layerId);
-  return { ok: failedLayerIds.length === 0, choice, failedLayerIds };
+  const skipped = outcomes
+    .filter((entry) => entry.skipped)
+    .map((entry) => ({
+      layerId: entry.layerId,
+      note: skipNote(entry.layerId, readState(entry.layerId)),
+    }));
+  const enabledCount = outcomes.filter((entry) => entry.ok).length;
+  return {
+    ok: failedLayerIds.length === 0 && enabledCount > 0,
+    choice,
+    failedLayerIds,
+    skipped,
+  };
+}
+
+const KEY_LABELS = Object.freeze({ reliefweb: 'ReliefWeb' });
+
+/** Quiet one-liner for a layer a mission skipped. No em-dashes. */
+function skipNote(layerId, state) {
+  const label = String(state?.name || layerId).replace(/^./, (c) =>
+    c.toUpperCase(),
+  );
+  if (state?.keyRequired) {
+    const key = state.keyLabel ? `a ${state.keyLabel} key` : 'an API key';
+    return `${label} needs ${key}, skipped.`;
+  }
+  return `${label} is unavailable right now, skipped.`;
 }
 
 /**
@@ -441,6 +483,17 @@ export function initFirstRunExperience({
         setLayerEnabled: (layerId) =>
           dataManager.setEnabled(layerId, true, { origin: 'user' }),
         flyToGlobe: () => styleManager.resetToGlobeView(),
+        getLayerState: (layerId) => {
+          const row = dataManager?.getAll?.().find((r) => r.id === layerId);
+          if (!row) return null;
+          const stats = row.stats || {};
+          return {
+            name: row.name,
+            keyRequired: stats.keyRequired === true,
+            unavailable: stats.unavailable === true,
+            keyLabel: KEY_LABELS[row.requiresKeyId] || '',
+          };
+        },
       });
     } catch (error) {
       // A thrown mission is a real defect worth seeing in a bug report; the
@@ -449,6 +502,15 @@ export function initFirstRunExperience({
     }
     if (closing) return;
     if (outcome?.ok) {
+      const notes = (outcome.skipped || []).map((entry) => entry.note);
+      if (notes.length && status) {
+        // Let the visitor read the quiet note before the card leaves.
+        status.dataset.sticky = 'true';
+        status.textContent = notes.join(' ');
+        setBusy(false);
+        globalThis.setTimeout(() => dismiss(), 2600);
+        return;
+      }
       dismiss();
       return;
     }

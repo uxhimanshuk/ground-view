@@ -672,3 +672,42 @@ test('every layer a mission drives is already in the shipped set_layer_visibilit
     assert.ok(allowedLayers.includes(layerId), `${layerId} must already be an allowed enum value`);
   }
 });
+
+test('a key-gated or unavailable layer is skipped with a quiet note and the mission still succeeds', async () => {
+  const states = {
+    crises: { name: 'Crises', keyRequired: true, keyLabel: 'ReliefWeb' },
+  };
+  const spy = missionSpy({ layerResult: (id) => id !== 'crises' });
+  const outcome = await runFirstRunChoice('pulse', {
+    ...spy.deps,
+    getLayerState: (id) => states[id] || { name: id },
+  });
+  assert.equal(outcome.ok, true);
+  assert.deepEqual(outcome.failedLayerIds, []);
+  assert.deepEqual(outcome.skipped.map((s) => s.layerId), ['crises']);
+  assert.equal(outcome.skipped[0].note, 'Crises needs a ReliefWeb key, skipped.');
+  // Already-known gating never even attempts the enable.
+  assert.deepEqual(spy.calls.layerIds, ['unrest', 'attention']);
+
+  // A layer that fails its enable and THEN reports unavailable is skipped too.
+  const later = { value: { name: 'Unrest' } };
+  const lateSpy = missionSpy({ layerResult: (id) => {
+    if (id === 'unrest') later.value = { name: 'Unrest', unavailable: true };
+    return id !== 'unrest';
+  } });
+  const lateOutcome = await runFirstRunChoice('pulse', {
+    ...lateSpy.deps,
+    getLayerState: (id) => (id === 'unrest' ? later.value : { name: id }),
+  });
+  assert.equal(lateOutcome.ok, true);
+  assert.equal(lateOutcome.skipped[0].note, 'Unrest is unavailable right now, skipped.');
+
+  // A plain failure with healthy state is still a failure.
+  const hard = missionSpy({ layerResult: (id) => id !== 'attention' });
+  const hardOutcome = await runFirstRunChoice('pulse', {
+    ...hard.deps,
+    getLayerState: (id) => ({ name: id }),
+  });
+  assert.equal(hardOutcome.ok, false);
+  assert.deepEqual(hardOutcome.failedLayerIds, ['attention']);
+});
