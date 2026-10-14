@@ -18,7 +18,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const REPO_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+);
 const SHOTS_DIR = path.join(REPO_ROOT, 'qa-shots');
 const argv = process.argv.slice(2);
 const opt = (name, dflt) => {
@@ -30,7 +33,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const results = [];
 const record = (name, ok, detail) => {
   results.push({ name, ok });
-  console.log(`  [${ok ? 'PASS' : 'FAIL'}] ${name}${detail ? `  ${detail}` : ''}`);
+  console.log(
+    `  [${ok ? 'PASS' : 'FAIL'}] ${name}${detail ? `  ${detail}` : ''}`,
+  );
 };
 
 async function executable() {
@@ -90,7 +95,9 @@ async function enable(page, id, timeoutS = 60) {
 async function overlayEntries(page, id) {
   return page.evaluate(
     (layerId) =>
-      window.__gevWorldOverlay?.getDiagnostics?.()?.entriesBySource?.[layerId] || 0,
+      window.__gevWorldOverlay?.getDiagnostics?.()?.entriesBySource?.[
+        layerId
+      ] || 0,
     id,
   );
 }
@@ -134,34 +141,70 @@ async function main() {
       console.log(`\n${id}`);
       await setView(page, 10, 51, 3_500_000);
       const stats = await enable(page, id);
-      record(`${id} loaded countries`, stats?.count > 50 && !stats.error && stats.placeholder !== true, JSON.stringify(stats));
-      await sleep(2500);
-      await page.mouse.move(700, 440);
-      await sleep(300);
-      await page.mouse.click(720, 450);
-      await sleep(1500);
-      const cards = await overlayEntries(page, id);
+      record(
+        `${id} loaded countries`,
+        stats?.count > 50 && !stats.error && stats.placeholder !== true,
+        JSON.stringify(stats),
+      );
+      // The country shapes build after the rows arrive; retry the click until
+      // they exist rather than assuming a fixed delay is enough.
+      let cards = 0;
+      for (let attempt = 0; attempt < 5 && cards < 1; attempt++) {
+        await sleep(2500);
+        await page.mouse.move(700, 440);
+        await sleep(300);
+        await page.mouse.click(720, 450);
+        await sleep(1500);
+        cards = await overlayEntries(page, id);
+      }
       record(`${id} click opens a card`, cards >= 1, `entries=${cards}`);
       const records = await page.evaluate(
-        (layerId) => window.__godsEyeView.dataManager.layers.get(layerId).module.getAnalystRecords(5),
+        (layerId) =>
+          window.__godsEyeView.dataManager.layers
+            .get(layerId)
+            .module.getAnalystRecords(5),
         id,
       );
-      record(`${id} analyst records`, records.length > 0 && records[0].kind === 'country');
-      await page.screenshot({ path: path.join(SHOTS_DIR, `structure-${id}.png`) });
-      await page.evaluate((layerId) => window.__godsEyeView.dataManager.setEnabled(layerId, false), id);
+      record(
+        `${id} analyst records`,
+        records.length > 0 && records[0].kind === 'country',
+      );
+      await page.screenshot({
+        path: path.join(SHOTS_DIR, `structure-${id}.png`),
+      });
+      await page.evaluate(
+        (layerId) =>
+          window.__godsEyeView.dataManager.setEnabled(layerId, false),
+        id,
+      );
     }
 
     console.log('\nlanguages');
     await setView(page, 10, 46, 1_500_000);
     const stats = await enable(page, 'languages');
-    record('languages loaded points', stats?.count > 8000 && !stats.error, JSON.stringify(stats));
+    record(
+      'languages loaded points',
+      stats?.count > 8000 && !stats.error,
+      JSON.stringify(stats),
+    );
     await sleep(2500);
     const labels = await overlayEntries(page, 'languages');
     record('languages labels at close zoom', labels > 0, `entries=${labels}`);
-    await page.screenshot({ path: path.join(SHOTS_DIR, 'structure-languages.png') });
-    const rec = await page.evaluate(() => window.__godsEyeView.dataManager.layers.get('languages').module.getAnalystRecords(3));
-    record('languages analyst records', rec.length === 3 && rec[0].kind === 'language');
-    await page.evaluate(() => window.__godsEyeView.dataManager.setEnabled('languages', false));
+    await page.screenshot({
+      path: path.join(SHOTS_DIR, 'structure-languages.png'),
+    });
+    const rec = await page.evaluate(() =>
+      window.__godsEyeView.dataManager.layers
+        .get('languages')
+        .module.getAnalystRecords(3),
+    );
+    record(
+      'languages analyst records',
+      rec.length === 3 && rec[0].kind === 'language',
+    );
+    await page.evaluate(() =>
+      window.__godsEyeView.dataManager.setEnabled('languages', false),
+    );
   } finally {
     await browser.close();
   }
