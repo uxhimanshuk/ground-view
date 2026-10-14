@@ -17,10 +17,13 @@ const RESPONSE_CAP = 512 * 1024;
 const MAX_ENTRIES = 256;
 
 const SNAPSHOT_ARTICLES = 60;
-const SNAPSHOT_CONCURRENCY = 6;
+const SNAPSHOT_CONCURRENCY = 3;
+// Wikimedia throttles bursts from shared CI addresses: retry 429 and 5xx with backoff.
+const SNAPSHOT_ATTEMPTS = 4;
 const SNAPSHOT_DAYS_BACK = 2;
 
 const two = (n) => String(n).padStart(2, '0');
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Yesterday's top-article lists for every heartland edition, for the static
@@ -32,6 +35,7 @@ const two = (n) => String(n).padStart(2, '0');
 export async function buildAttentionSnapshot({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
+  retryDelayMs = 1_000,
   heartlands = LANGUAGE_HEARTLANDS,
 } = {}) {
   const nowMs = now();
@@ -43,14 +47,21 @@ export async function buildAttentionSnapshot({
       const d = new Date(nowMs - back * 86_400_000);
       const path = `${h.code}.wikipedia/all-access/${d.getUTCFullYear()}/${two(d.getUTCMonth() + 1)}/${two(d.getUTCDate())}`;
       const signal = AbortSignal.timeout(20_000);
-      const response = await fetchImpl(`${API_ROOT}${path}`, {
-        signal,
-        redirect: 'error',
-        headers: {
-          'Api-User-Agent': API_USER_AGENT,
-          Accept: 'application/json',
-        },
-      });
+      let response;
+      for (let attempt = 1; ; attempt++) {
+        response = await fetchImpl(`${API_ROOT}${path}`, {
+          signal,
+          redirect: 'error',
+          headers: {
+            'Api-User-Agent': API_USER_AGENT,
+            Accept: 'application/json',
+          },
+        });
+        const retryable = response.status === 429 || response.status >= 500;
+        if (!retryable || attempt >= SNAPSHOT_ATTEMPTS) break;
+        await response.body?.cancel();
+        await sleep(retryDelayMs * attempt);
+      }
       if (response.status === 404) {
         await response.body?.cancel();
         continue;

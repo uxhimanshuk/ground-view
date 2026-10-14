@@ -184,3 +184,38 @@ test('a failed feed with no previous snapshot is an error with no file', async (
     await rm(out, { recursive: true, force: true });
   }
 });
+
+test('attention snapshot retries editions Wikimedia throttles', async () => {
+  const { buildAttentionSnapshot } = await import(
+    '../../server/providers/attention.js'
+  );
+  const calls = new Map();
+  const fetchImpl = async (url) => {
+    const code = new URL(url).pathname.split('/')[6].split('.')[0];
+    const n = (calls.get(code) || 0) + 1;
+    calls.set(code, n);
+    // Every edition is throttled twice before it answers.
+    if (n <= 2) return new Response('', { status: 429 });
+    return new Response(
+      JSON.stringify({
+        items: [
+          {
+            year: '2026',
+            month: '10',
+            day: '13',
+            articles: [{ article: 'Example', views: 10, rank: 1 }],
+          },
+        ],
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    );
+  };
+  const snapshot = await buildAttentionSnapshot({
+    fetchImpl,
+    now: () => Date.UTC(2026, 9, 14, 12),
+    retryDelayMs: 0,
+  });
+  assert.deepEqual(snapshot.failed, []);
+  assert.equal(Object.keys(snapshot.editions).length, calls.size);
+  for (const n of calls.values()) assert.equal(n, 3);
+});
