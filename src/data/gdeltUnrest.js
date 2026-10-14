@@ -64,6 +64,43 @@ export function countryFromPlaceName(name) {
   return parts.length ? parts[parts.length - 1] : null;
 }
 
+const LANDMARK_WORDS =
+  /\b(square|plaza|park|stadium|airport|station|bridge|palace|monument|market|university|college|hospital|avenue|street|road|building|embassy|mosque|cathedral|church|temple|parliament|court|gate|barracks|roundabout|junction|mall|port|harbou?r|dam|tower|memorial|secretariat|ministry|prison|camp)\b/i;
+
+/** City names that GDELT spells as "City, City, Country" in this batch. */
+function confirmedCityNames(events) {
+  const names = new Set();
+  for (const { place } of events) {
+    const parts = place.split(',').map((part) => part.trim());
+    if (parts.length === 3 && parts[0] && parts[0] === parts[1])
+      names.add(parts[0]);
+  }
+  return names;
+}
+
+/**
+ * Label a cluster by its city, not by a landmark inside it. GDELT geocodes some
+ * events to a feature such as "Tinubu Square, Lagos, Nigeria"; a feature is
+ * recognised by a landmark word, by four or more name parts, or by a second
+ * part that the same batch also spells as a city. The place stays the same, only
+ * the label moves up to the city and country.
+ * @param {string} place GDELT ActionGeo FullName.
+ * @param {Set<string>} [cityNames]
+ * @returns {string}
+ */
+export function cityLabel(place, cityNames = new Set()) {
+  const parts = String(place ?? '')
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length < 3) return place;
+  const feature =
+    parts.length >= 4 ||
+    LANDMARK_WORDS.test(parts[0]) ||
+    (parts[0] !== parts[1] && cityNames.has(parts[1]));
+  return feature ? parts.slice(1).join(', ') : place;
+}
+
 /**
  * Parse one export (tab-separated text) into protest events. Actor columns are
  * never read. Rows that are not protests, lack a precise location, or are
@@ -121,6 +158,7 @@ export function parseProtestEvents(text) {
  */
 export function clusterProtestEvents(events) {
   const cells = new Map();
+  const cityNames = confirmedCityNames(events);
   for (const event of events) {
     const cellLat = Math.round(event.lat / CLUSTER_CELL_DEGREES);
     const cellLon = Math.round(event.lon / CLUSTER_CELL_DEGREES);
@@ -146,10 +184,8 @@ export function clusterProtestEvents(events) {
     cell.count += event.articles;
     cell.events += 1;
     cell.updatedMs = Math.max(cell.updatedMs, event.addedMs);
-    cell.places.set(
-      event.place,
-      (cell.places.get(event.place) || 0) + event.articles,
-    );
+    const label = cityLabel(event.place, cityNames);
+    cell.places.set(label, (cell.places.get(label) || 0) + event.articles);
     if (event.url) {
       const known = cell.urls.get(event.url);
       cell.urls.set(event.url, {

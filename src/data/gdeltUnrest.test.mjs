@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
+  cityLabel,
   clusterProtestEvents,
   countryFromPlaceName,
   formatGdeltTimestamp,
@@ -24,7 +25,10 @@ test('timestamps round-trip through the GDELT stamp format', () => {
 });
 
 test('only http(s) news links without credentials survive', () => {
-  assert.equal(safeNewsUrl('https://example.org/a?b=1'), 'https://example.org/a?b=1');
+  assert.equal(
+    safeNewsUrl('https://example.org/a?b=1'),
+    'https://example.org/a?b=1',
+  );
   assert.equal(safeNewsUrl('javascript:alert(1)'), null);
   assert.equal(safeNewsUrl('https://user:pw@example.org/'), null);
   assert.equal(safeNewsUrl(`https://example.org/${'a'.repeat(600)}`), null);
@@ -32,7 +36,10 @@ test('only http(s) news links without credentials survive', () => {
 });
 
 test('country is the last part of a GDELT place name', () => {
-  assert.equal(countryFromPlaceName('Glasgow, Glasgow City, United Kingdom'), 'United Kingdom');
+  assert.equal(
+    countryFromPlaceName('Glasgow, Glasgow City, United Kingdom'),
+    'United Kingdom',
+  );
   assert.equal(countryFromPlaceName('Peru'), 'Peru');
   assert.equal(countryFromPlaceName(''), null);
 });
@@ -98,7 +105,14 @@ test('nearby points merge into one cell and sample links are capped at three', (
   };
   const events = [
     base,
-    { ...base, id: '2', lat: 10.2, lon: 20.2, url: 'https://a.example/2', addedMs: 3000 },
+    {
+      ...base,
+      id: '2',
+      lat: 10.2,
+      lon: 20.2,
+      url: 'https://a.example/2',
+      addedMs: 3000,
+    },
     { ...base, id: '3', url: 'https://a.example/3', articles: 9 },
     { ...base, id: '4', url: 'https://a.example/4' },
     { ...base, id: '5', lat: 40, lon: 40, place: 'Far, Elsewhere' },
@@ -109,4 +123,35 @@ test('nearby points merge into one cell and sample links are capped at three', (
   assert.equal(clusters[0].events, 4);
   assert.equal(clusters[0].sampleUrls.length, 3);
   assert.equal(clusters[0].sampleUrls[0], 'https://a.example/3');
+});
+
+test('a landmark geocode is labelled with its city, not the landmark', () => {
+  const event = {
+    id: '1',
+    lat: 6.45,
+    lon: 3.39,
+    articles: 3,
+    addedMs: 1000,
+    url: null,
+  };
+  const square = clusterProtestEvents([
+    { ...event, place: 'Tinubu Square, Lagos, Nigeria' },
+  ]);
+  assert.equal(square[0].placeName, 'Lagos, Nigeria');
+  assert.equal(square[0].country, 'Nigeria');
+  // A bare feature name is lifted when the same batch also spells the city.
+  const bare = clusterProtestEvents([
+    { ...event, place: 'Tinubu, Lagos, Nigeria' },
+    { ...event, id: '2', lat: 40, lon: 40, place: 'Lagos, Lagos, Nigeria' },
+  ]);
+  const lifted = bare.find((c) => c.lat < 10);
+  assert.equal(lifted.placeName, 'Lagos, Nigeria');
+  assert.equal(
+    cityLabel('Glasgow, Glasgow City, United Kingdom'),
+    'Glasgow, Glasgow City, United Kingdom',
+  );
+  assert.equal(
+    cityLabel('Sonoma Valley, California, United States'),
+    'Sonoma Valley, California, United States',
+  );
 });
