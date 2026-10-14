@@ -26,5 +26,5 @@
 
 @import './src/ui/styles/weather.css';
 @import './src/ui/styles/panel-surfaces.css';
-@import './src/ui/styles/cyber.css';
 @import './src/ui/styles/ground-view.css';
+@import './src/ui/styles/cyber.css';
