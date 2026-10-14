@@ -23,6 +23,9 @@ import { createMapillarySource } from '../layers/streetLevel/providers/mapillary
 import { createUnhcrSource } from '../layers/refugees/source.js';
 import { createBundledMigrantStockSource } from '../layers/migrantStock/source.js';
 import { createBundledRemittanceSource } from '../layers/remittances/source.js';
+import { createUnrestSource } from '../layers/unrest/source.js';
+import { createWikimediaAttentionSource } from '../layers/attention/source.js';
+import { createCrisesSource } from '../layers/crises/source.js';
 import { createReferenceSources } from '../sources/reference.js';
 export { createReferenceSources as createStandaloneReferenceSources } from '../sources/reference.js';
 
@@ -59,6 +62,9 @@ export function createStandaloneLayerSources(overrides = {}) {
     wind: createWindSource(),
     weather: createWeatherSource(),
     cyclones: createCycloneSource(),
+    unrest: createUnrestSource(),
+    attention: createWikimediaAttentionSource(),
+    crises: createCrisesSource(),
     mapillary: createMapillarySource({
       token: import.meta.env?.MAPILLARY_CLIENT_TOKEN || '',
     }),

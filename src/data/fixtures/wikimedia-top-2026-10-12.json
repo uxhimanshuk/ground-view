@@ -1,0 +1,251 @@
+{
+ "en.wikipedia": {
+  "items": [
+   {
+    "project": "en.wikipedia",
+    "access": "all-access",
+    "year": "2026",
+    "month": "10",
+    "day": "12",
+    "articles": [
+     {
+      "article": "Main_Page",
+      "views": 6436583,
+      "rank": 1
+     },
+     {
+      "article": "RJ_Mitte",
+      "views": 1406448,
+      "rank": 2
+     },
+     {
+      "article": "Special:Search",
+      "views": 861944,
+      "rank": 3
+     },
+     {
+      "article": "Wikipedia:Featured_pictures",
+      "views": 568383,
+      "rank": 4
+     },
+     {
+      "article": "Selma_Blair",
+      "views": 249706,
+      "rank": 5
+     },
+     {
+      "article": "Mathematics",
+      "views": 205134,
+      "rank": 6
+     },
+     {
+      "article": "List_of_equations",
+      "views": 201041,
+      "rank": 7
+     },
+     {
+      "article": "Carrie_(miniseries)",
+      "views": 189885,
+      "rank": 8
+     },
+     {
+      "article": "Deaths_in_2026",
+      "views": 139204,
+      "rank": 9
+     },
+     {
+      "article": "Below_(miniseries)",
+      "views": 137034,
+      "rank": 10
+     },
+     {
+      "article": "Nidal_Hasan",
+      "views": 119111,
+      "rank": 11
+     },
+     {
+      "article": "Jennifer_Meyer",
+      "views": 111995,
+      "rank": 12
+     },
+     {
+      "article": "Ilhan_Omar",
+      "views": 109068,
+      "rank": 13
+     },
+     {
+      "article": "Jacob_Misiorowski",
+      "views": 108386,
+      "rank": 14
+     }
+    ]
+   }
+  ]
+ },
+ "de.wikipedia": {
+  "items": [
+   {
+    "project": "de.wikipedia",
+    "access": "all-access",
+    "year": "2026",
+    "month": "10",
+    "day": "12",
+    "articles": [
+     {
+      "article": "Wikipedia:Hauptseite",
+      "views": 890146,
+      "rank": 1
+     },
+     {
+      "article": "Bärbel_Bas",
+      "views": 343710,
+      "rank": 2
+     },
+     {
+      "article": "Spezial:Suche",
+      "views": 131794,
+      "rank": 3
+     },
+     {
+      "article": "Alexander_Schweitzer",
+      "views": 85753,
+      "rank": 4
+     },
+     {
+      "article": "RJ_Mitte",
+      "views": 41128,
+      "rank": 5
+     },
+     {
+      "article": "Liste_der_größten_Auslegerbrücken",
+      "views": 32319,
+      "rank": 6
+     },
+     {
+      "article": "HTTP-Cookie",
+      "views": 26041,
+      "rank": 7
+     },
+     {
+      "article": "Survive_–_Gestrandet_im_Ozean",
+      "views": 23347,
+      "rank": 8
+     },
+     {
+      "article": "Liste_der_Maya-Ruinen",
+      "views": 20933,
+      "rank": 9
+     },
+     {
+      "article": "Almila_Bagriacik",
+      "views": 18099,
+      "rank": 10
+     },
+     {
+      "article": "Marina_Weisband",
+      "views": 16911,
+      "rank": 11
+     },
+     {
+      "article": "Lilith_Stangenberg",
+      "views": 16845,
+      "rank": 12
+     },
+     {
+      "article": "Hummeln",
+      "views": 16642,
+      "rank": 13
+     },
+     {
+      "article": "Sarna_Röser",
+      "views": 16637,
+      "rank": 14
+     }
+    ]
+   }
+  ]
+ },
+ "ja.wikipedia": {
+  "items": [
+   {
+    "project": "ja.wikipedia",
+    "access": "all-access",
+    "year": "2026",
+    "month": "10",
+    "day": "12",
+    "articles": [
+     {
+      "article": "メインページ",
+      "views": 644394,
+      "rank": 1
+     },
+     {
+      "article": "救命病棟24時",
+      "views": 113703,
+      "rank": 2
+     },
+     {
+      "article": "特別:検索",
+      "views": 67864,
+      "rank": 3
+     },
+     {
+      "article": "ミルウォーキー・ブルワーズ",
+      "views": 46817,
+      "rank": 4
+     },
+     {
+      "article": "VIVANT",
+      "views": 41216,
+      "rank": 5
+     },
+     {
+      "article": "EXILE",
+      "views": 41036,
+      "rank": 6
+     },
+     {
+      "article": "富栄ドラム",
+      "views": 38191,
+      "rank": 7
+     },
+     {
+      "article": "宇野千代",
+      "views": 35653,
+      "rank": 8
+     },
+     {
+      "article": "簗和生",
+      "views": 34714,
+      "rank": 9
+     },
+     {
+      "article": "木戸大聖",
+      "views": 34223,
+      "rank": 10
+     },
+     {
+      "article": "石川数正",
+      "views": 32316,
+      "rank": 11
+     },
+     {
+      "article": "森カンナ",
+      "views": 32238,
+      "rank": 12
+     },
+     {
+      "article": "ミルウォーキー",
+      "views": 29073,
+      "rank": 13
+     },
+     {
+      "article": "ジェイコブ・ミジオロウスキー",
+      "views": 28995,
+      "rank": 14
+     }
+    ]
+   }
+  ]
+ }
+}

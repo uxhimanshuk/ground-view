@@ -24,6 +24,11 @@ import { createApplicationLocalAdsb } from './layers/localAdsb.js';
 import { createApplicationAwareness } from './layers/militaryAwareness.js';
 import { createApplicationFirms } from './layers/firms.js';
 import { createApplicationEarthquakes } from './layers/earthquakes.js';
+import {
+  createApplicationUnrest,
+  createApplicationAttention,
+  createApplicationCrises,
+} from './layers/pulse.js';
 import { createApplicationFirePerimeters } from './layers/perimeters.js';
 import { createApplicationCables } from './layers/submarineCables.js';
 import {
@@ -122,6 +127,9 @@ export function createApplicationCatalog({
           ...(resolveAsset ? { resolveAsset } : {}),
         }),
         createApplicationEarthquakes({ source: sources.earthquakes }),
+        createApplicationUnrest({ source: sources.unrest }),
+        createApplicationAttention({ source: sources.attention }),
+        createApplicationCrises({ source: sources.crises }),
         createApplicationFirePerimeters({
           source: sources['fire-perimeters'],
         }),

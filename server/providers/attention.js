@@ -1,0 +1,114 @@
+import { readResponseTextCapped } from './common/http.js';
+import { makeRateLimiter, clientKey } from './common/rate-limit.js';
+import { LANGUAGE_HEARTLANDS } from '../../src/layers/attention/heartlands.js';
+
+// Wikimedia answers the pageviews API without CORS for requests that carry a
+// custom Api-User-Agent header (the preflight returns HTTP 405), so the
+// browser asks this fixed-origin proxy, which sends the descriptive header
+// Wikimedia asks automated clients to use.
+const API_ROOT = 'https://wikimedia.org/api/rest_v1/metrics/pageviews/top/';
+const API_USER_AGENT =
+  'ground-view/0.1 (aggregate Wikipedia pageview globe; local proxy; keyless)';
+const CODES = new Set(LANGUAGE_HEARTLANDS.map((h) => h.code));
+const ROUTE = /^\/([a-z]{2,3})\/(\d{4})\/(\d{2})\/(\d{2})$/;
+const OK_TTL_MS = 6 * 3600_000;
+const MISSING_TTL_MS = 10 * 60_000;
+const RESPONSE_CAP = 512 * 1024;
+const MAX_ENTRIES = 256;
+
+/** Cached pass-through of daily top-article lists at `/api/attention/{code}/{yyyy}/{mm}/{dd}`. */
+export function attentionProxy({
+  fetchImpl = (...args) => globalThis.fetch(...args),
+  now = () => Date.now(),
+} = {}) {
+  const cache = new Map();
+  const inFlight = new Map();
+  const allow = makeRateLimiter({
+    windowMs: 60_000,
+    max: 240,
+    globalMax: 2400,
+  });
+
+  async function load(code, y, m, d) {
+    const url = `${API_ROOT}${code}.wikipedia/all-access/${y}/${m}/${d}`;
+    const signal = AbortSignal.timeout(20_000);
+    const response = await fetchImpl(url, {
+      signal,
+      redirect: 'error',
+      headers: { 'Api-User-Agent': API_USER_AGENT, Accept: 'application/json' },
+    });
+    if (response.status === 404) {
+      await response.body?.cancel();
+      return { status: 404, body: '{"error":"not_found"}' };
+    }
+    if (!response.ok) {
+      await response.body?.cancel();
+      throw new Error('upstream_unavailable');
+    }
+    const body = await readResponseTextCapped(response, RESPONSE_CAP, signal);
+    JSON.parse(body);
+    return { status: 200, body };
+  }
+
+  async function handler(req, res) {
+    const send = (status, body, headers = {}) => {
+      if (res.destroyed) return;
+      res.writeHead(status, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+        ...(status === 405 ? { Allow: 'GET' } : {}),
+        ...headers,
+      });
+      res.end(body);
+    };
+    if (req.method !== 'GET')
+      return send(405, '{"error":"method_not_allowed"}');
+    const match = ROUTE.exec((req.url || '').split('?')[0]);
+    if (!match || !CODES.has(match[1]))
+      return send(400, '{"error":"invalid_attention_query"}');
+    const [, code, y, m, d] = match;
+    const date = Date.UTC(+y, +m - 1, +d);
+    if (
+      !Number.isFinite(date) ||
+      date > now() ||
+      now() - date > 10 * 86_400_000
+    )
+      return send(400, '{"error":"invalid_attention_date"}');
+    if (!allow(clientKey(req)))
+      return send(429, '{"error":"rate_limited"}', { 'Retry-After': '60' });
+    const key = `${code}/${y}/${m}/${d}`;
+    const hit = cache.get(key);
+    if (
+      hit &&
+      now() - hit.savedAt < (hit.status === 200 ? OK_TTL_MS : MISSING_TTL_MS)
+    )
+      return send(hit.status, hit.body);
+    try {
+      if (!inFlight.has(key)) {
+        inFlight.set(
+          key,
+          load(code, y, m, d).finally(() => inFlight.delete(key)),
+        );
+      }
+      const value = await inFlight.get(key);
+      cache.delete(key);
+      cache.set(key, { ...value, savedAt: now() });
+      if (cache.size > MAX_ENTRIES) cache.delete(cache.keys().next().value);
+      send(value.status, value.body);
+    } catch {
+      if (hit?.status === 200)
+        return send(200, hit.body, { 'X-Data-Stale': 'true' });
+      send(502, '{"error":"attention_unavailable"}');
+    }
+  }
+
+  return {
+    name: 'attention',
+    configureServer({ middlewares }) {
+      middlewares.use('/api/attention', handler);
+    },
+    configurePreviewServer({ middlewares }) {
+      middlewares.use('/api/attention', handler);
+    },
+  };
+}

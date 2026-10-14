@@ -25,6 +25,9 @@ import { keySetupEndpoint } from '../standalone/key-setup.js';
 import { weatherProxy } from './weather.js';
 import { firePerimetersProxy } from './firePerimeters.js';
 import { cycloneProxy } from './cyclones.js';
+import { unrestProxy } from './unrest.js';
+import { crisesProxy } from './crises.js';
+import { attentionProxy } from './attention.js';
 import { windProxy } from './wind.js';
 
 /**
@@ -58,6 +61,9 @@ function localProviderPlugins({ realtime } = {}) {
     windProxy(),
     weatherProxy(),
     cycloneProxy(),
+    unrestProxy(),
+    crisesProxy(),
+    attentionProxy(),
     mapillaryProxy(),
     firePerimetersProxy(),
     keySetupEndpoint(),

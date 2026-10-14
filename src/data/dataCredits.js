@@ -144,6 +144,18 @@ export const DATA_CREDITS = [
     html: 'Earthquakes: Data courtesy of the U.S. Geological Survey',
   },
   {
+    key: 'gdelt-unrest',
+    html: 'Unrest: protest-coded news events from <a href="https://www.gdeltproject.org/" target="_blank" rel="noopener">The GDELT Project</a>. Machine-coded; counts reflect coverage, not crowd size.',
+  },
+  {
+    key: 'wikimedia-pageviews',
+    html: 'Attention: most-read articles from the <a href="https://doc.wikimedia.org/generated-data-platform/aqs/analytics-api/" target="_blank" rel="noopener">Wikimedia pageviews API</a> (CC0). Pageviews include some automated traffic.',
+  },
+  {
+    key: 'reliefweb',
+    html: 'Crises: situations listed by <a href="https://reliefweb.int/" target="_blank" rel="noopener">ReliefWeb</a> (UN OCHA). Absence here is not absence of need.',
+  },
+  {
     key: 'nasa-gibs',
     html:
       'Recent imagery: We acknowledge the use of imagery provided by services from ' +
