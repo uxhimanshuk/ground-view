@@ -71,6 +71,7 @@ export function mapAttentionAnalystRecord(row) {
 export function attentionStats(meta) {
   return {
     partial: meta.partial === true,
+    ...(meta.stale === true ? { stale: true } : {}),
     asOf: Date.parse(meta.date),
     coverage: 'Large Wikipedia editions, previous UTC day',
   };

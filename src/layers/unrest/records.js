@@ -63,6 +63,7 @@ export function normalizeUnrestSnapshot(payload) {
       source: typeof payload.source === 'string' ? payload.source : 'GDELT 2.0',
       mode: payload.mode === 'geo' ? 'geo' : 'export',
       fetchedAt: finite(payload.fetchedAt),
+      generatedAt: finite(payload.generatedAt),
       newestSliceAt: finite(payload.newestSliceAt),
       slicesLoaded: finite(payload.slicesLoaded),
       slicesExpected: finite(payload.slicesExpected),

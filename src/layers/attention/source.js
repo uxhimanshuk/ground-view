@@ -1,11 +1,17 @@
 import { LANGUAGE_HEARTLANDS } from './heartlands.js';
 import { normalizeTopArticles } from './records.js';
 import { readResponseJsonCapped } from '../../sources/httpBody.js';
+import {
+  STATIC_MODE,
+  isSnapshotStale,
+  snapshotUrl,
+} from '../../sources/snapshots.js';
 
 // Wikimedia's pageviews API answers a custom Api-User-Agent header without CORS
 // (its preflight returns 405), so the same-origin proxy sends that header.
 const API_ROOT = '/api/attention/';
 const RESPONSE_LIMIT = 512 * 1024;
+const SNAPSHOT_LIMIT = 2 * 1024 * 1024;
 const DAY_MS = 86_400_000;
 const CONCURRENCY = 6;
 /** Yesterday (UTC) first, then one more day back if the edition has not published. */
@@ -29,8 +35,49 @@ export function createWikimediaAttentionSource({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
   heartlands = LANGUAGE_HEARTLANDS,
+  useSnapshot = STATIC_MODE,
+  url = snapshotUrl('attention.json'),
 } = {}) {
   let cached = null;
+
+  /** The static demo: one file holds yesterday's trimmed list for every edition. */
+  async function readSnapshot(signal) {
+    const response = await fetchImpl(url, { signal });
+    if (!response.ok)
+      throw new Error(`Attention snapshot HTTP ${response.status}`);
+    const payload = await readResponseJsonCapped(
+      response,
+      SNAPSHOT_LIMIT,
+      signal,
+    );
+    if (payload?.schemaVersion !== 1 || typeof payload.editions !== 'object')
+      throw new Error('Malformed attention snapshot');
+    const rows = [];
+    let failures = 0;
+    for (const heartland of heartlands) {
+      const row = normalizeTopArticles(
+        heartland,
+        payload.editions[heartland.code],
+      );
+      if (row) rows.push(row);
+      else failures++;
+    }
+    if (!rows.length) throw new Error('Wikimedia pageviews unavailable');
+    rows.sort((a, b) => a.code.localeCompare(b.code));
+    return {
+      rows,
+      meta: {
+        source: 'Wikimedia pageviews',
+        date: rows.map((row) => row.date).sort()[0],
+        fetchedAt: payload.fetchedAt,
+        generatedAt: payload.generatedAt,
+        stale: isSnapshotStale(payload.generatedAt, now()),
+        partial: failures > 0,
+        failed: failures,
+        unavailable: false,
+      },
+    };
+  }
 
   async function fetchEdition(heartland, nowMs, signal) {
     for (let back = 1; back <= MAX_DAYS_BACK; back++) {
@@ -56,6 +103,7 @@ export function createWikimediaAttentionSource({
   return {
     async getSnapshot({ signal } = {}) {
       signal?.throwIfAborted();
+      if (useSnapshot) return readSnapshot(signal);
       const nowMs = now();
       const dayKey = pageviewDay(nowMs, 1);
       if (cached?.dayKey === dayKey && !cached.meta.partial)

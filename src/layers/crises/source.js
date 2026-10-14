@@ -1,12 +1,19 @@
 import { normalizeCrisesSnapshot } from './records.js';
 import { readResponseJsonCapped } from '../../sources/httpBody.js';
+import {
+  STATIC_MODE,
+  snapshotUrl,
+  withSnapshotAge,
+} from '../../sources/snapshots.js';
 
 export const CRISES_RESPONSE_LIMIT = 4 * 1024 * 1024;
 
 /** Request and validate the GDACS alerts snapshot from the same-origin proxy. */
 export function createCrisesSource({
   fetchImpl = (...args) => globalThis.fetch(...args),
-  url = '/api/crises',
+  useSnapshot = STATIC_MODE,
+  url = useSnapshot ? snapshotUrl('crises.json') : '/api/crises',
+  now = () => Date.now(),
 } = {}) {
   return {
     async getSnapshot({ signal } = {}) {
@@ -18,7 +25,9 @@ export function createCrisesSource({
         CRISES_RESPONSE_LIMIT,
         signal,
       );
-      const snapshot = normalizeCrisesSnapshot(payload);
+      const snapshot = normalizeCrisesSnapshot(
+        useSnapshot ? withSnapshotAge(payload, now()) : payload,
+      );
       if (!snapshot) throw new Error('Malformed crises response');
       return snapshot;
     },

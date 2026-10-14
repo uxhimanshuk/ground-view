@@ -25,6 +25,9 @@ export function normalizeNewsToneSnapshot(payload) {
       : null,
     stale: payload.stale === true,
     files: Number.isFinite(payload.files) ? payload.files : 0,
+    updatedAt: Number.isFinite(payload.generatedAt)
+      ? payload.generatedAt
+      : null,
   };
 }
 

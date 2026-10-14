@@ -93,6 +93,9 @@ export function normalizeCrisesSnapshot(payload) {
     meta: {
       source: 'GDACS',
       fetchedAt: Number.isFinite(payload.fetchedAt) ? payload.fetchedAt : null,
+      generatedAt: Number.isFinite(payload.generatedAt)
+        ? payload.generatedAt
+        : null,
       stale: payload.stale === true,
       unavailable: payload.unavailable === true,
       keyRequired: false,

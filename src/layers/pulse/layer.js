@@ -269,7 +269,10 @@ export function createPulseLayer({
         for (const row of rows) _rowById.set(row.stableId, row);
         publishLabels();
         if (_selectedId) showSelectedCard();
-        _lastUpdate = now();
+        // A snapshot reports when it was generated, so its age is honest.
+        _lastUpdate = Number.isFinite(meta?.generatedAt)
+          ? meta.generatedAt
+          : now();
         _lastError = null;
         console.log(`[Data:${name}] Updated: ${rows.length} records`);
         return true;

@@ -388,7 +388,9 @@ export function createChoroplethLayer({
         }
         _datasets.set(wanted, { dataset, fetchedAt: Date.now() });
         if (wanted === _option) applyDataset(dataset);
-        _lastUpdate = Date.now();
+        _lastUpdate = Number.isFinite(dataset.updatedAt)
+          ? dataset.updatedAt
+          : Date.now();
         _lastError = dataset.placeholder
           ? dataset.note || 'Placeholder data, not real scores'
           : null;
@@ -511,6 +513,7 @@ export function createChoroplethLayer({
         lastUpdate: _lastUpdate,
         error: _lastError,
         placeholder: _current?.dataset?.placeholder === true,
+        ...(_current?.dataset?.stale === true ? { stale: true } : {}),
         noData: _shapes ? _shapes.size - _count : null,
       };
     },
