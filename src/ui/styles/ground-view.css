@@ -1,0 +1,21 @@
+/* ── Ground View chrome ───────────────────────────────────────────
+   The original surveillance rail cards are hidden, not removed. CCTV and
+   Street Level stay reachable through the collapsed "From God's Eye View"
+   layer section; CONTEXT only carries Contacts, Space Missions and Radio,
+   none of which act on Ground View layers. Their code and markup stay. */
+#right-context-rail > #cctv-panel,
+#right-context-rail > #street-level-panel,
+#right-context-rail > #global-context-panel {
+  display: none !important;
+}
+
+/* The selected-vessel readout only appears while a vessel is selected. */
+.hud-ais-vessel:not(.active) {
+  display: none;
+}
+
+/* Live Ground View counts replace the imagery-quality readout. */
+.hud-gv-counts {
+  max-width: 640px;
+  margin-left: auto;
+}
