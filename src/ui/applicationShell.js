@@ -34,6 +34,7 @@ import * as Cesium from 'cesium';
 import { aircraftTrackingTarget } from '../cockpitTracking.js';
 
 import { ShellFeedback } from './shellFeedback.js';
+import { STATIC_MODE } from '../sources/snapshots.js';
 
 import { runCctvLayerEnableTransition } from '../cctvFocusPolicy.js';
 
@@ -900,7 +901,8 @@ export class StyleManager extends ShellFacade {
     this._localSdrControls?.destroy();
     this._localSdrControls = null;
     const receiver = this.services.localAdsbLayer?.receiver;
-    if (receiver) {
+    // The local SDR and receiver feeds need the local server.
+    if (receiver && !STATIC_MODE) {
       this._localSdrControls = new LocalSdrControls({
         document,
         receiver,

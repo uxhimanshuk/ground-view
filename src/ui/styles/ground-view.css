@@ -53,3 +53,32 @@
     transition: none;
   }
 }
+
+/* Static demo: one-line about note, bottom right, clear of the dock. */
+#gv-static-note {
+  position: fixed;
+  right: 16px;
+  bottom: 10px;
+  max-width: min(420px, 42vw);
+  margin: 0;
+  font: 400 10px/1.45 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+  text-align: right;
+  color: rgba(190, 215, 225, 0.72);
+  z-index: 40;
+  pointer-events: auto;
+}
+#gv-static-note a {
+  color: inherit;
+  text-decoration: underline;
+}
+@media (max-width: 760px) {
+  #gv-static-note {
+    left: 16px;
+    right: 16px;
+    max-width: none;
+    text-align: left;
+    bottom: 4px;
+    font-size: 9px;
+  }
+}

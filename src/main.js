@@ -1,5 +1,9 @@
 import { createStandaloneApplication } from './standalone/application.js';
 import { describeError } from './standalone/errors.js';
+import { installStaticDemo } from './standalone/staticDemo.js';
+
+// Static demo only: guard `/api/` and show the about line before anything fetches.
+installStaticDemo();
 
 const application = createStandaloneApplication({
   googleApiKey: import.meta.env.GOOGLE_MAPS_API_KEY,

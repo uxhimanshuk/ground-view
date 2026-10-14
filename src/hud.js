@@ -35,6 +35,7 @@ import {
   DEFAULT_HUD_LAYOUT,
   normalizeHudLayout,
 } from './hudLayouts.js';
+import { STATIC_MODE } from './sources/snapshots.js';
 
 /** Color palettes keyed by shader mode; applied as CSS custom properties. */
 const HUD_COLORS = {
@@ -657,7 +658,8 @@ export class IntelHUD {
    */
   async _updateSummary(animate = false, force = false) {
     const fallbackText = this._composeSummary();
-    if (!this._latestMetrics) {
+    // The static demo has no AI summary service; the telemetry line stands.
+    if (STATIC_MODE || !this._latestMetrics) {
       this._setSummaryText(fallbackText, animate);
       return;
     }

@@ -5,6 +5,7 @@ import { initImageryBoxTool } from '../ui/imageryBoxTool.js';
 import { createRecentImageryPanel } from '../ui/recentImagery.js';
 import { initGevVoiceCommands } from '../voice/gevRealtime.js';
 import { installViews, isEmbeddedInline } from './embed.js';
+import { STATIC_MODE } from '../sources/snapshots.js';
 import { installScopeMask, destroyScopeMask } from '../scopeMask.js';
 import {
   installRenderGovernor,
@@ -160,19 +161,25 @@ export function createApplicationTools({
   defer(() => {
     if (window.__godsEyeView === debug) delete window.__godsEyeView;
   });
-  const voiceCommands = initGevVoiceCommands({
-    ...voice,
-    floorServices: operations.surface.groundFloor,
-    annotationResolver: operations.annotationResolver,
-    searchNavigation: operations.searchAndFlyTo,
-    signal,
-    placeSearch,
-    viewer,
-    styleManager,
-    dataManager,
-    sceneDirector,
-    annotations,
-  });
+  // The static demo has no voice backend: no mic control, no realtime session.
+  const voiceCommands = STATIC_MODE
+    ? {
+        stop() {},
+        runner: async () => ({ ok: false, error: 'voice_disabled' }),
+      }
+    : initGevVoiceCommands({
+        ...voice,
+        floorServices: operations.surface.groundFloor,
+        annotationResolver: operations.annotationResolver,
+        searchNavigation: operations.searchAndFlyTo,
+        signal,
+        placeSearch,
+        viewer,
+        styleManager,
+        dataManager,
+        sceneDirector,
+        annotations,
+      });
   defer(() => {
     voiceCommands.stop({ removeUi: true });
     if (window.__gevVoiceCommands === voiceCommands)

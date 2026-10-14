@@ -8,6 +8,7 @@ import {
   keySetupWithAlternatives,
 } from '../keySetupCore.mjs';
 import { createWeatherPanel } from './weatherPanel.js';
+import { STATIC_MODE } from '../sources/snapshots.js';
 const FEED_STATE_LABELS = Object.freeze({
   nominal: 'ON',
   loading: 'LOADING',
@@ -253,6 +254,9 @@ export class LayerPanel {
       if (!layer.showInTogglePanel) continue;
       const group =
         PANEL_ORDER[PANEL_POSITIONS.get(layer.id)]?.label ?? 'Other layers';
+      // The static demo has no server for the original layers, so only the
+      // Ground View families are offered.
+      if (STATIC_MODE && !GROUND_VIEW_GROUPS.has(group)) continue;
       if (!GROUND_VIEW_GROUPS.has(group) && !legacyDetails) {
         legacyDetails = document.createElement('details');
         legacyDetails.className = 'data-layer-legacy';
