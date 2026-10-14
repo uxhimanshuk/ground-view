@@ -26,6 +26,11 @@ import { createApplicationFirms } from './layers/firms.js';
 import { createApplicationEarthquakes } from './layers/earthquakes.js';
 import { createApplicationFirePerimeters } from './layers/perimeters.js';
 import { createApplicationCables } from './layers/submarineCables.js';
+import {
+  createApplicationMigrantStock,
+  createApplicationRefugees,
+  createApplicationRemittances,
+} from './layers/flows.js';
 import { createApplicationStreetLevel } from './layers/streetLevel.js';
 import { createInfrastructureLayers } from '../data/infrastructure.js';
 import { localGeoJsonServices } from './localGeojsonServices.js';
@@ -162,6 +167,9 @@ export function createApplicationCatalog({
         createCyclonesLayer({ feed: sources.cyclones }),
         ...createInfrastructureLayers(localGeoJsonServices),
         createApplicationCables({ source: sources.cables }),
+        createApplicationRefugees({ source: sources.refugees }),
+        createApplicationMigrantStock({ source: sources['migrant-stock'] }),
+        createApplicationRemittances({ source: sources.remittances }),
         createApplicationFirms({
           surface,
           id: 'local-firms',

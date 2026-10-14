@@ -47,6 +47,9 @@ export const CATALOG_SOURCE_CONTRACTS = Object.freeze({
   earthquakes: contract(['earthquakes'], ['getSnapshot']),
   'fire-perimeters': contract(['fire-perimeters'], ['getSnapshot']),
   cables: contract(['telegeography-submarine-cables'], ['fetch']),
+  refugees: contract(['refugees'], ['getSnapshot']),
+  'migrant-stock': contract(['migrant-stock'], ['getSnapshot']),
+  remittances: contract(['remittances'], ['getSnapshot']),
   transit: contract(['transit'], ['requestSnapshot', 'getHistory']),
 });
 

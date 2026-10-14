@@ -20,6 +20,9 @@ import { createCycloneSource } from '../layers/cyclones/source.js';
 import { createWindSource } from '../layers/wind/source.js';
 import { createFirmsSource } from '../layers/firms/source.js';
 import { createMapillarySource } from '../layers/streetLevel/providers/mapillary/source.js';
+import { createUnhcrSource } from '../layers/refugees/source.js';
+import { createBundledMigrantStockSource } from '../layers/migrantStock/source.js';
+import { createBundledRemittanceSource } from '../layers/remittances/source.js';
 import { createReferenceSources } from '../sources/reference.js';
 export { createReferenceSources as createStandaloneReferenceSources } from '../sources/reference.js';
 
@@ -30,6 +33,9 @@ export function createStandaloneLayerSources(overrides = {}) {
   const mapTiles = createOpenFreeMapSource();
   const defaults = {
     ...createReferenceSources(),
+    refugees: createUnhcrSource(),
+    'migrant-stock': createBundledMigrantStockSource(),
+    remittances: createBundledRemittanceSource(),
     directions: createDirectionsSource(),
     'recent-imagery': createRecentImagerySource(),
     flights: createFlightSource(),

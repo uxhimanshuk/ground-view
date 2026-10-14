@@ -358,6 +358,16 @@ export const DATA_CREDITS = [
       '<a href="https://www.submarinecablemap.com" target="_blank" rel="noopener">submarinecablemap.com</a> ' +
       '(CC BY-NC-SA 3.0 — NonCommercial)',
   },
+  {
+    key: 'flows',
+    html:
+      'Flows: refugees ' +
+      '<a href="https://www.unhcr.org/refugee-statistics" target="_blank" rel="noopener">UNHCR Refugee Population Statistics</a> · ' +
+      'migrant stock UN DESA International Migrant Stock 2024 ' +
+      '(<a href="https://creativecommons.org/licenses/by/3.0/igo/" target="_blank" rel="noopener">CC BY 3.0 IGO</a>) · ' +
+      'remittances World Bank / KNOMAD Bilateral Remittance Matrix 2021 · ' +
+      'country points: Natural Earth (public domain)',
+  },
 ];
 
 /**

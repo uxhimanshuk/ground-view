@@ -37,11 +37,34 @@ const CHECKER_PATH = fileURLToPath(
 const NEXT_PATH = fileURLToPath(
   new URL('../../scripts/next-layer-state-token.mjs', import.meta.url),
 );
-const reservationRows = JSON.parse(
+const productionRows = JSON.parse(
   readFileSync(
     new URL('./layerStateTokenReservations.json', import.meta.url),
     'utf8',
   ),
+);
+// Tokens pre-allocated to the Ground View families. The allocation scenarios
+// below start from the baseline ledger without them, so they stay valid as
+// families land in any order.
+const FAMILY_TOKENS = new Set([
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '00',
+  '01',
+  '02',
+]);
+const reservationRows = productionRows.filter(
+  ([, token]) => !FAMILY_TOKENS.has(token),
+);
+const BASELINE_RESERVATIONS = parseLayerStateTokenReservations(reservationRows);
+const FAMILY_REGISTRY_ENTRY = new RegExp(
+  `\\n  Object\\.freeze\\(\\{\\s*id: '[a-z0-9-]+',\\s*token: '(?:${[...FAMILY_TOKENS].join('|')})',\\s*disposition: 'enabled-only',?\\s*\\}\\),`,
+  'g',
 );
 
 test('pre-ledger published ownership is independent of the candidate mapping', () => {
@@ -56,7 +79,7 @@ test('pre-ledger published ownership is independent of the candidate mapping', (
   assert.throws(
     () =>
       validateLayerStateAllocations(PRE_LEDGER_LAYER_STATE_TOKENS, {
-        ...LAYER_STATE_TOKEN_RESERVATIONS,
+        ...BASELINE_RESERVATIONS,
         flights: '00',
       }),
     /Published layer-state token changed or removed: flights/,
@@ -104,7 +127,10 @@ function writeCodecFixture(cwd, rows, entries) {
     providerCodec,
     readFileSync(new URL('./idSwitches.js', import.meta.url)),
   );
-  const source = readFileSync(CODEC_SOURCE_PATH, 'utf8');
+  const source = readFileSync(CODEC_SOURCE_PATH, 'utf8').replace(
+    FAMILY_REGISTRY_ENTRY,
+    '',
+  );
   const registryEnd = ']);\n\nexport const REGISTERED_LAYER_IDS';
   assert.equal(source.split(registryEnd).length, 2);
   const additions = entries
@@ -125,12 +151,12 @@ function writeCodecFixture(cwd, rows, entries) {
 
 test('reservation ledger is complete, pinned, and rejects duplicate or malformed rows', () => {
   assert.deepEqual(
-    { ...parseLayerStateTokenReservations(reservationRows) },
+    { ...parseLayerStateTokenReservations(productionRows) },
     { ...LAYER_STATE_TOKEN_RESERVATIONS },
   );
-  assert.equal(Object.keys(LAYER_STATE_TOKEN_RESERVATIONS).length, 29);
+  assert.equal(Object.keys(BASELINE_RESERVATIONS).length, 29);
   assert.deepEqual(
-    { ...LAYER_STATE_TOKEN_RESERVATIONS },
+    { ...BASELINE_RESERVATIONS },
     { ...LEGACY_LAYER_STATE_TOKENS, 'street-level': '0' },
   );
   assert.throws(
@@ -193,7 +219,7 @@ test('published retired digits and competing PRs advance the merge-time allocati
       assert.throws(
         () =>
           validateLayerStateAllocations(published, {
-            ...LAYER_STATE_TOKEN_RESERVATIONS,
+            ...BASELINE_RESERVATIONS,
             newcomer: '3',
           }),
         /changed or removed: retired-layer/,
@@ -350,7 +376,7 @@ test('an isolated valid two-character fixture round-trips an l field beyond the 
     );
     assert.equal(
       validateLayerStateAllocations(
-        LAYER_STATE_TOKEN_RESERVATIONS,
+        BASELINE_RESERVATIONS,
         codec.LAYER_STATE_TOKEN_RESERVATIONS,
       ),
       true,
@@ -386,7 +412,7 @@ test('checker reads a complete future base ledger and rejects retired-token reus
       assert.throws(
         () =>
           validateLayerStateAllocations(published, {
-            ...LAYER_STATE_TOKEN_RESERVATIONS,
+            ...BASELINE_RESERVATIONS,
             newcomer: '00',
           }),
         /changed or removed/,

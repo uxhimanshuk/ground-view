@@ -1,0 +1,292 @@
+{
+ "page": 1,
+ "maxPages": 1,
+ "items": [
+  {
+   "coo_name": "Syrian Arab Rep.",
+   "coo": "SYR",
+   "coo_iso": "SYR",
+   "coa_name": "Türkiye",
+   "coa": "TUR",
+   "coa_iso": "TUR",
+   "refugees": 2347756,
+   "asylum_seekers": "0",
+   "year": 2025
+  },
+  {
+   "coo_name": "Unknown ",
+   "coo": "UKN",
+   "coo_iso": "UNK",
+   "coa_name": "United States of America",
+   "coa": "USA",
+   "coa_iso": "USA",
+   "refugees": 30317,
+   "asylum_seekers": 1437190,
+   "year": 2025
+  },
+  {
+   "coo_name": "Sudan",
+   "coo": "SUD",
+   "coo_iso": "SDN",
+   "coa_name": "Chad",
+   "coa": "CHD",
+   "coa_iso": "TCD",
+   "refugees": 1330950,
+   "asylum_seekers": 3645,
+   "year": 2025
+  },
+  {
+   "coo_name": "Afghanistan",
+   "coo": "AFG",
+   "coo_iso": "AFG",
+   "coa_name": "Pakistan",
+   "coa": "PAK",
+   "coa_iso": "PAK",
+   "refugees": 1158538,
+   "asylum_seekers": 119251,
+   "year": 2025
+  },
+  {
+   "coo_name": "Myanmar",
+   "coo": "MYA",
+   "coo_iso": "MMR",
+   "coa_name": "Bangladesh",
+   "coa": "BGD",
+   "coa_iso": "BGD",
+   "refugees": 1178003,
+   "asylum_seekers": 33,
+   "year": 2025
+  },
+  {
+   "coo_name": "Ukraine",
+   "coo": "UKR",
+   "coo_iso": "UKR",
+   "coa_name": "Germany",
+   "coa": "GFR",
+   "coa_iso": "DEU",
+   "refugees": 1173192,
+   "asylum_seekers": 1716,
+   "year": 2025
+  },
+  {
+   "coo_name": "South Sudan",
+   "coo": "SSD",
+   "coo_iso": "SSD",
+   "coa_name": "Uganda",
+   "coa": "UGA",
+   "coa_iso": "UGA",
+   "refugees": 1033579,
+   "asylum_seekers": 71,
+   "year": 2025
+  },
+  {
+   "coo_name": "Ukraine",
+   "coo": "UKR",
+   "coo_iso": "UKR",
+   "coa_name": "Poland",
+   "coa": "POL",
+   "coa_iso": "POL",
+   "refugees": 972287,
+   "asylum_seekers": 5205,
+   "year": 2025
+  },
+  {
+   "coo_name": "Sudan",
+   "coo": "SUD",
+   "coo_iso": "SDN",
+   "coa_name": "Egypt",
+   "coa": "ARE",
+   "coa_iso": "EGY",
+   "refugees": 37684,
+   "asylum_seekers": 796517,
+   "year": 2025
+  },
+  {
+   "coo_name": "Afghanistan",
+   "coo": "AFG",
+   "coo_iso": "AFG",
+   "coa_name": "Iran (Islamic Rep. of)",
+   "coa": "IRN",
+   "coa_iso": "IRN",
+   "refugees": 758339,
+   "asylum_seekers": "0",
+   "year": 2025
+  },
+  {
+   "coo_name": "Syrian Arab Rep.",
+   "coo": "SYR",
+   "coo_iso": "SYR",
+   "coa_name": "Germany",
+   "coa": "GFR",
+   "coa_iso": "DEU",
+   "refugees": 668647,
+   "asylum_seekers": 65511,
+   "year": 2025
+  },
+  {
+   "coo_name": "Dem. Rep. of the Congo",
+   "coo": "COD",
+   "coo_iso": "COD",
+   "coa_name": "Uganda",
+   "coa": "UGA",
+   "coa_iso": "UGA",
+   "refugees": 644537,
+   "asylum_seekers": 4535,
+   "year": 2025
+  },
+  {
+   "coo_name": "Sudan",
+   "coo": "SUD",
+   "coo_iso": "SDN",
+   "coa_name": "Libya",
+   "coa": "LBY",
+   "coa_iso": "LBY",
+   "refugees": 551727,
+   "asylum_seekers": 87439,
+   "year": 2025
+  },
+  {
+   "coo_name": "South Sudan",
+   "coo": "SSD",
+   "coo_iso": "SSD",
+   "coa_name": "Sudan",
+   "coa": "SUD",
+   "coa_iso": "SDN",
+   "refugees": 634954,
+   "asylum_seekers": "0",
+   "year": 2025
+  },
+  {
+   "coo_name": "Afghanistan",
+   "coo": "AFG",
+   "coo_iso": "AFG",
+   "coa_name": "Germany",
+   "coa": "GFR",
+   "coa_iso": "DEU",
+   "refugees": 288286,
+   "asylum_seekers": 43250,
+   "year": 2025
+  },
+  {
+   "coo_name": "Iraq",
+   "coo": "IRQ",
+   "coo_iso": "IRQ",
+   "coa_name": "Germany",
+   "coa": "GFR",
+   "coa_iso": "DEU",
+   "refugees": 128544,
+   "asylum_seekers": 18871,
+   "year": 2025
+  },
+  {
+   "coo_name": "Türkiye",
+   "coo": "TUR",
+   "coo_iso": "TUR",
+   "coa_name": "Germany",
+   "coa": "GFR",
+   "coa_iso": "DEU",
+   "refugees": 49271,
+   "asylum_seekers": 61185,
+   "year": 2025
+  },
+  {
+   "coo_name": "Eritrea",
+   "coo": "ERT",
+   "coo_iso": "ERI",
+   "coa_name": "Germany",
+   "coa": "GFR",
+   "coa_iso": "DEU",
+   "refugees": 67698,
+   "asylum_seekers": 2187,
+   "year": 2025
+  },
+  {
+   "coo_name": "Iran (Islamic Rep. of)",
+   "coo": "IRN",
+   "coo_iso": "IRN",
+   "coa_name": "Germany",
+   "coa": "GFR",
+   "coa_iso": "DEU",
+   "refugees": 45128,
+   "asylum_seekers": 12730,
+   "year": 2025
+  },
+  {
+   "coo_name": "Somalia",
+   "coo": "SOM",
+   "coo_iso": "SOM",
+   "coa_name": "Germany",
+   "coa": "GFR",
+   "coa_iso": "DEU",
+   "refugees": 41383,
+   "asylum_seekers": 5641,
+   "year": 2025
+  },
+  {
+   "coo_name": "Unknown ",
+   "coo": "UKN",
+   "coo_iso": "UNK",
+   "coa_name": "Australia",
+   "coa": "AUL",
+   "coa_iso": "AUS",
+   "refugees": 146,
+   "asylum_seekers": 15856,
+   "year": 2025
+  },
+  {
+   "coo_name": "Stateless",
+   "coo": "STA",
+   "coo_iso": "XXA",
+   "coa_name": "Germany",
+   "coa": "GFR",
+   "coa_iso": "DEU",
+   "refugees": 12949,
+   "asylum_seekers": 259,
+   "year": 2025
+  },
+  {
+   "coo_name": "Unknown ",
+   "coo": "UKN",
+   "coo_iso": "UNK",
+   "coa_name": "Germany",
+   "coa": "GFR",
+   "coa_iso": "DEU",
+   "refugees": 33490,
+   "asylum_seekers": 5269,
+   "year": 2025
+  },
+  {
+   "coo_name": "Tibetan",
+   "coo": "TIB",
+   "coo_iso": "TIB",
+   "coa_name": "Nepal",
+   "coa": "NEP",
+   "coa_iso": "NPL",
+   "refugees": 12540,
+   "asylum_seekers": "0",
+   "year": 2025
+  },
+  {
+   "coo_name": "Afghanistan",
+   "coo": "AFG",
+   "coo_iso": "AFG",
+   "coa_name": "Afghanistan",
+   "coa": "AFG",
+   "coa_iso": "AFG",
+   "refugees": "0",
+   "asylum_seekers": "0",
+   "year": 2025
+  },
+  {
+   "coo_name": "Eritrea",
+   "coo": "ERT",
+   "coo_iso": "ERI",
+   "coa_name": "Egypt",
+   "coa": "ARE",
+   "coa_iso": "EGY",
+   "refugees": 24782,
+   "asylum_seekers": 19679,
+   "year": 2025
+  }
+ ]
+}

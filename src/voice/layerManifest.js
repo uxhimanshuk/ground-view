@@ -36,6 +36,16 @@ const AIRCRAFT_FIELDS = {
   onGround: ['f'],
 };
 
+/** Country-pair fields shared by the Flows layers (origin and destination are names). */
+const FLOW_FIELDS = {
+  origin: ['t'],
+  destination: ['t'],
+  country: ['t'],
+  originIso3: ['t'],
+  destinationIso3: ['t'],
+  year: ['n'],
+};
+
 const layers = [
   {
     id: 'flights',
@@ -148,6 +158,42 @@ const layers = [
       },
       timeField: 'timeMs',
       window: 'last 24 h',
+    },
+  },
+  {
+    id: 'refugees',
+    aliases: ['refugees', 'refugee flows', 'asylum seekers'],
+    context: false,
+    query: {
+      fields: {
+        ...FLOW_FIELDS,
+        value: ['n', 'people'],
+      },
+      window: 'latest UNHCR year',
+    },
+  },
+  {
+    id: 'migrant-stock',
+    aliases: ['migrants', 'migrant stock', 'migration'],
+    context: false,
+    query: {
+      fields: {
+        ...FLOW_FIELDS,
+        value: ['n', 'people'],
+      },
+      window: 'mid-2024 stock',
+    },
+  },
+  {
+    id: 'remittances',
+    aliases: ['remittances', 'money sent home'],
+    context: false,
+    query: {
+      fields: {
+        ...FLOW_FIELDS,
+        value: ['n', 'USD millions'],
+      },
+      window: '2021 estimates',
     },
   },
   {

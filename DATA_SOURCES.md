@@ -339,3 +339,17 @@ NOAA density imagery with the raw GLM product.
 ## In-app attribution
 
 The required Google Maps / Cesium credit renders on the on-globe credit line (`#cesium-credits`, bottom-left) and must stay visible — including in clean-view and recording modes (the whole line, logo + "Google Maps" + the "Data attribution" link, stays on screen; only the GEV panels/HUD fade). The layer-specific credits (adsb.lol, adsbdb, TeleGeography, OSM datacenters/dams/roads, NASA FIRMS, CelesTrak, USGS, City of Austin, Fintraffic, GBFS, Radio Browser, OpenSky, AISStream) are registered into the expandable **"Data attribution"** popover on that credit line via `viewer.creditDisplay.addStaticCredit(new Cesium.Credit(html, /* showOnScreen */ false))` — see `src/data/dataCredits.js`. When you add a new data source, add its license and attribution to this file **and** append an entry to `DATA_CREDITS` in `src/data/dataCredits.js` so it surfaces in the app.
+
+
+## Ground View sources
+
+### Flows (arcs between countries)
+
+| Source | Used for | Retrieved | Licence / terms | Attribution |
+| --- | --- | --- | --- | --- |
+| **UNHCR Refugee Population Statistics API** (`https://api.unhcr.org/population/v1/population/`) | `refugees` layer: refugees and asylum-seekers under UNHCR mandate by country of origin and asylum, latest year (2025 at build time). Live, keyless, browser-direct (CORS `*`), cached 24 h in memory. Excludes Palestine refugees under UNRWA | live | [UNHCR data terms](https://www.unhcr.org/refugee-statistics/copyright): free to use with a source credit | "UNHCR Refugee Population Statistics Database" |
+| **UN DESA International Migrant Stock 2024** (`https://www.un.org/development/desa/pd/sites/www.un.org.development.desa.pd/files/undesa_pd_2024_ims_stock_by_sex_destination_and_origin.xlsx`) | `migrant-stock` layer, bundled by `scripts/build-migrant-stock.mjs` into `src/data/local_data/flows/migrant-stock-2024.json` (pairs of 50,000 or more plus each destination's top five origins) | 2026-10-14 | [CC BY 3.0 IGO](https://creativecommons.org/licenses/by/3.0/igo/) | "UN DESA, Population Division (2024). International Migrant Stock 2024" |
+| **World Bank / KNOMAD Bilateral Remittance Matrix 2021** (December 2022 version; official file `https://www.knomad.org/sites/default/files/2022-12/bilateral_remittance_matrix_2021_0.xlsx`, retrieved from the Internet Archive snapshot because knomad.org no longer serves the path) | `remittances` layer, bundled by `scripts/build-remittances.mjs` into `src/data/local_data/flows/remittances-2021.json` (pairs of USD 50 million or more plus each receiver's top five senders) | 2026-10-14 | World Bank Open Data terms, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | "KNOMAD/World Bank Bilateral Remittance Matrix 2021" |
+| **Natural Earth 10m admin-0 countries** (label points, commit `ca96624a`) | Arc anchors for all Flows layers, bundled by `scripts/build-country-centroids.mjs` into `src/data/local_data/flows/country-centroids.json` | 2026-10-14 | Public domain | "Made with Natural Earth" |
+
+Every Flows record is a country pair. No layer, card or analyst row names a private individual.

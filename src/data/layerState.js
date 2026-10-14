@@ -615,6 +615,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   }),
   Object.freeze({ id: 'local-firms', token: 'w', disposition: 'enabled-only' }),
   Object.freeze({
+    id: 'migrant-stock',
+    token: '01',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'military',
     token: 'm',
     disposition: 'enabled+mirrored-options',
@@ -641,6 +646,12 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     token: '1',
     disposition: 'enabled+options',
     optionOwner: 'recent-imagery',
+  }),
+  Object.freeze({ id: 'refugees', token: '00', disposition: 'enabled-only' }),
+  Object.freeze({
+    id: 'remittances',
+    token: '02',
+    disposition: 'enabled-only',
   }),
   Object.freeze({
     id: 'rocket-launches',
