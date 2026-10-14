@@ -195,7 +195,9 @@ export function createDefaultProject() {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     installedBuiltInSceneIds: SCENE_RECIPES.filter(
-      (recipe) => typeof recipe.installAlongsideSceneId === 'string',
+      (recipe) =>
+        typeof recipe.installAlongsideSceneId === 'string' ||
+        recipe.installFirst === true,
     ).map((recipe) => recipe.id),
     scenes: SCENE_RECIPES.map(recipeToScene),
   };

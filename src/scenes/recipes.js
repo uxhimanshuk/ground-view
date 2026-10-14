@@ -3,6 +3,7 @@
  * Each recipe is deterministic so repeated runs produce similar footage.
  */
 
+import { DAY_ON_EARTH_RECIPE } from './dayOnEarth.js';
 import { expandNepalEvidencePack } from './nepalEvidencePack.js';
 
 const BHOTE_KOSHI_NEPAL_BASE_RECIPE = Object.freeze({
@@ -966,7 +967,7 @@ const PUBLIC_SCENE_RECIPES = [
 
 /** Build the recipe list without mutating stored user-authored projects. */
 export function createSceneRecipes({ localDemoRecipes = EVENT_RECIPES } = {}) {
-  return [...localDemoRecipes, ...PUBLIC_SCENE_RECIPES];
+  return [DAY_ON_EARTH_RECIPE, ...localDemoRecipes, ...PUBLIC_SCENE_RECIPES];
 }
 
 export const SCENE_RECIPES = createSceneRecipes();

@@ -35,6 +35,7 @@ import {
   readSceneShare,
 } from '../director/sharing/bundle.js';
 import { createDefaultScenePacks } from './packs/defaults.js';
+import { createSceneBeats } from './beats.js';
 import {
   layerStatesForShot,
   visualStateForShot,
@@ -95,6 +96,11 @@ export class SceneDirector {
     this.dataManager = dataManager;
     this._isMapStackAvailable = isMapStackAvailable;
     this._scenePacks = scenePacks;
+    this._beats = createSceneBeats({
+      viewer,
+      dataManager,
+      recipeForShot: (shot) => scenePacks.recipeForShot?.(shot),
+    });
     this._bundleAssets = createBundleAssets();
     this._dataPacks = createSceneDataPacks(viewer, {
       ...dataPacks,
@@ -231,6 +237,7 @@ export class SceneDirector {
     this._cameraHandoffUnsubscribe?.();
     this._removeCameraInput?.();
     this._cameraMotion?.destroy();
+    this._beats?.destroy();
     this._sharing?.destroy();
     this._bundleAssets?.clear();
     this._interactions?.destroy();
@@ -263,6 +270,14 @@ export class SceneDirector {
       const installed = new Set(project.installedBuiltInSceneIds || []);
       let migrated = false;
       for (const recipe of SCENE_RECIPES) {
+        if (recipe.installFirst === true && !installed.has(recipe.id)) {
+          // A bundled scene that leads the list, offered once to saved projects.
+          if (!project.scenes.some((scene) => scene.id === recipe.id))
+            project.scenes.unshift(recipeToScene(recipe));
+          installed.add(recipe.id);
+          migrated = true;
+          continue;
+        }
         if (
           typeof recipe.installAlongsideSceneId !== 'string' ||
           installed.has(recipe.id)
@@ -2373,6 +2388,7 @@ export class SceneDirector {
    * and resets UI buttons to the idle state.
    */
   _finishRun() {
+    this._beats?.clear();
     this._setSceneMediaPlayback();
     this._clock.finish();
     this._setPlaybackKeyboardEnabled(false);

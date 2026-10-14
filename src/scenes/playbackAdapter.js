@@ -2,6 +2,8 @@
 export function createScenePlaybackAdapter(director, defaultShotDurationSec) {
   let timing;
   let travel;
+  // The shot as played this run: a copy when a live beat chose its camera.
+  let live = null;
   return {
     async releaseScene(scene, token) {
       const released = await director._releaseSceneLayers(scene, token);
@@ -43,22 +45,25 @@ export function createScenePlaybackAdapter(director, defaultShotDurationSec) {
         throw new Error('Data packs unavailable');
       return result;
     },
-    travel({ scene, shot, token }) {
+    async travel({ scene, shot, token }) {
+      live = (await director._beats?.prepare(scene, shot, token)) || shot;
+      if (token.cancelled) return;
       director._loadedSceneId = scene.id;
-      const duration = shot.durationSec || defaultShotDurationSec;
-      timing = director._startSceneClockTicker(scene, shot, token);
-      travel = director._beginShotTravel(scene, shot, duration);
-      const flight = director._flyShotCamera(scene, shot, duration, token);
-      director._publishShotTravel(scene, shot, travel);
+      const duration = live.durationSec || defaultShotDurationSec;
+      timing = director._startSceneClockTicker(scene, live, token);
+      travel = director._beginShotTravel(scene, live, duration);
+      const flight = director._flyShotCamera(scene, live, duration, token);
+      director._publishShotTravel(scene, live, travel);
       return flight;
     },
     settle({ scene, shot, token }) {
       director._settleShotLayerStates(scene, shot, token, travel);
     },
     hold({ scene, shot, token }) {
-      return director._holdShot(scene, shot, token);
+      return director._holdShot(scene, live || shot, token);
     },
     completeShot({ scene, shot, index }) {
+      live = null;
       director._clock.stopSceneTimer();
       director._publishSceneClock(scene, shot, timing.endElapsedSec, {
         running: true,
@@ -70,6 +75,7 @@ export function createScenePlaybackAdapter(director, defaultShotDurationSec) {
       });
     },
     complete() {
+      director._beats?.clear();
       director._setProgress(1);
       director._updateStatus('Scene run complete');
       director._logEvent('scene_run_complete', {});
