@@ -1433,7 +1433,9 @@ body.recording-mode #right-context-rail > [data-panel-id] {
   content: '▸ ';
 }
 
-.data-layer-legacy[open] > .data-layer-legacy-summary .data-layer-legacy-title::before {
+.data-layer-legacy[open]
+  > .data-layer-legacy-summary
+  .data-layer-legacy-title::before {
   content: '▾ ';
 }
 

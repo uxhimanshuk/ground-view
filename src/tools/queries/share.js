@@ -106,10 +106,10 @@ function appBase(services) {
 
 export const showInGodsEyeView = defineTool({
   name: 'show_in_gods_eye_view',
-  title: "Show in Ground View",
+  title: 'Show in Ground View',
   description:
-    "Shows a view in Ground View: in clients that display apps, the live " +
-    "Ground View globe in the conversation; everywhere, a link that opens " +
+    'Shows a view in Ground View: in clients that display apps, the live ' +
+    'Ground View globe in the conversation; everywhere, a link that opens ' +
     'it. Pass the view another answer returned, or describe one: an area ' +
     'framed from above or a camera position, with chosen data layers, visual ' +
     'style and map, optionally following an aircraft (or riding in its ' +
