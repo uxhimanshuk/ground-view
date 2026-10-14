@@ -3,7 +3,7 @@ import { readResponseJsonCapped } from '../../sources/httpBody.js';
 
 export const CRISES_RESPONSE_LIMIT = 4 * 1024 * 1024;
 
-/** Request and validate the ReliefWeb situations snapshot from the same-origin proxy. */
+/** Request and validate the GDACS alerts snapshot from the same-origin proxy. */
 export function createCrisesSource({
   fetchImpl = (...args) => globalThis.fetch(...args),
   url = '/api/crises',

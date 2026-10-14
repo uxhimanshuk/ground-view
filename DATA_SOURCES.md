@@ -380,17 +380,19 @@ Every Flows record is a country pair. No layer, card or analyst row names a priv
 - **Meaning:** Pageviews include some automated traffic. Fixture
   `src/data/fixtures/wikimedia-top-2026-10-12.json` captured 2026-10-14.
 
-### Pulse: crises (ReliefWeb)
+### Pulse: disaster alerts (GDACS)
 
-- **Source:** [ReliefWeb API v2](https://apidoc.reliefweb.int/) `disasters`, status `ongoing` and
-  `alert`, placed at the primary country centroid (`country.location`).
-- **Access:** ReliefWeb now requires an approved appname; an unapproved one is answered with
-  HTTP 403 (checked 2026-10-14). The proxy `server/providers/crises.js` reads it from
-  `RELIEFWEB_APPNAME` and reports `keyRequired` when it is absent. Request one at
-  `https://apidoc.reliefweb.int/parameters#appname`. Without it the layer is honestly unavailable.
-- **Licence:** ReliefWeb content is subject to its terms of use; credit ReliefWeb and the original source.
-- **Meaning:** Situations listed by ReliefWeb. Absence here is not absence of need. Fixture
-  `src/data/fixtures/reliefweb-disasters-schema-sample.json` is synthetic and says so.
+- **Source:** [GDACS](https://www.gdacs.org/) (Global Disaster Alert and Coordination System, United
+  Nations and European Commission JRC) event list, `gdacsapi/api/events/geteventlist/SEARCH`, hazards
+  EQ, TC, FL, VO, DR, WF. Orange and Red alerts for the last 30 days, Green alerts for the last 14 days,
+  placed at the GDACS event point. The API returns at most 100 events per request and ignores paging,
+  so Green alerts are fetched one hazard type at a time.
+- **Access:** keyless, no CORS headers, so the proxy `server/providers/crises.js` (`/api/crises`)
+  fetches it and caches for 15 minutes. Checked 2026-10-14.
+- **Licence:** GDACS data is free to use with attribution to GDACS; see https://www.gdacs.org/About/overview.aspx.
+- **Meaning:** Automatic alerts from GDACS, estimated from hazard models. Conflicts and epidemics are
+  not covered. Fixture `src/data/fixtures/gdacs-events-2026-10-14.json` is a trimmed live capture.
+  This replaces the earlier ReliefWeb source (decided 2026-10-14; ReliefWeb needs an approved appname).
 
 ---
 

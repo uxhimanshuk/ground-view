@@ -234,21 +234,29 @@ const layers = [
   },
   {
     id: 'crises',
-    aliases: ['crises', 'humanitarian crises', 'disasters', 'reliefweb'],
+    aliases: [
+      'crises',
+      'disasters',
+      'disaster alerts',
+      'floods',
+      'cyclone alerts',
+      'gdacs',
+    ],
     context: false,
     query: {
       fields: {
         name: ['t'],
-        crisisType: ['t'],
-        family: ['t'],
-        status: ['t'],
+        hazard: ['t'],
+        eventType: ['t'],
+        alertLevel: ['t'],
+        value: ['n', 'alert level 1 to 3'],
         country: ['t'],
         countries: ['t'],
         startMs: ['ms'],
       },
       timeField: 'startMs',
       caveat:
-        'Situations listed by ReliefWeb. Absence here is not absence of need.',
+        'Automatic alerts from GDACS, estimated from hazard models. Conflicts and epidemics are not covered.',
     },
   },
   {

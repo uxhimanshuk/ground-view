@@ -50,6 +50,7 @@
 - `wikimedia-top-2026-10-12.json`: the top 14 entries of the Wikimedia pageviews
   top-articles response for the en, de and ja Wikipedia editions on 2026-10-12,
   retrieved 2026-10-14. CC0. Used by the attention tests.
-- `reliefweb-disasters-schema-sample.json`: SYNTHETIC. Hand-built to the documented
-  ReliefWeb API v2 shape because ReliefWeb rejects unapproved appnames (HTTP 403),
-  so no live capture was possible. Placeholder names, ids and coordinates; not real data.
+- `gdacs-events-2026-10-14.json`: a trimmed capture of the GDACS event list
+  (`gdacsapi/api/events/geteventlist/SEARCH`), retrieved 2026-10-14. Orange and Red
+  alerts plus a few Green ones; unused properties dropped, long country lists cut to
+  four. Used by the crises (disaster alerts) tests; never loaded at runtime.

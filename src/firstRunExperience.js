@@ -298,8 +298,6 @@ export async function runFirstRunChoice(
   };
 }
 
-const KEY_LABELS = Object.freeze({ reliefweb: 'ReliefWeb' });
-
 /** Quiet one-liner for a layer a mission skipped. No em-dashes. */
 function skipNote(layerId, state) {
   const label = String(state?.name || layerId)

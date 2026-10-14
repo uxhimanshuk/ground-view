@@ -118,7 +118,7 @@ const PANEL_LABELS = {
   'local-firms': 'Active Fires',
   unrest: 'Unrest',
   attention: 'Attention',
-  crises: 'Crises',
+  crises: 'Disaster alerts',
 };
 
 function panelLabel(layer) {

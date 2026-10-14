@@ -8,7 +8,7 @@
  *   (i)   UNREST    loads protest clusters from /api/unrest, no error,
  *                   feed state reads FALLBACK (the GDELT export path).
  *   (ii)  ATTENTION loads per-language top articles straight from Wikimedia.
- *   (iii) CRISES    loads ReliefWeb situations when RELIEFWEB_APPNAME is set
+ *   (iii) CRISES    loads GDACS disaster alerts (keyless)
  *                   on the server, otherwise reports keyRequired honestly.
  *   (iv)  CARDS     a real click on a rendered marker opens the Pulse card with
  *                   source, as-of date, caveat and http(s) links.
@@ -164,20 +164,13 @@ async function main() {
     await page.screenshot({ path: path.join(SHOTS_DIR, 'pulse-attention.png') });
 
     const crises = await enableAndSettle(page, 'crises');
-    if (crises?.count > 0) {
-      record('(iii) crises loads ReliefWeb situations', !crises.error, JSON.stringify(crises));
-      const card = await clickFirstMarker(page, 'crises');
-      record(
-        '(iv) crisis marker click opens a card',
-        !!card && /Absence here is not absence of need/.test(card.text),
-      );
-    } else {
-      record(
-        '(iii) crises without RELIEFWEB_APPNAME reports keyRequired honestly',
-        crises?.keyRequired === true && /RELIEFWEB_APPNAME/.test(crises.error || ''),
-        JSON.stringify(crises),
-      );
-    }
+    record('(iii) crises loads GDACS alerts', crises?.count > 0 && !crises.error, JSON.stringify(crises));
+    const crisisCard = await clickFirstMarker(page, 'crises');
+    record(
+      '(iv) alert marker click opens a card with the GDACS caveat',
+      !!crisisCard && /Conflicts and epidemics are not covered/.test(crisisCard.text),
+      crisisCard ? crisisCard.text.slice(0, 120) : 'no card',
+    );
     await page.screenshot({ path: path.join(SHOTS_DIR, 'pulse-crises.png') });
     record('no uncaught page errors', errors.length === 0, errors.join(' | '));
   } finally {

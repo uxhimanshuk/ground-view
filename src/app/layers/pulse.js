@@ -25,7 +25,7 @@ export function createApplicationAttention(options) {
   return createAttentionLayer({ ...pulseWiring(), ...options });
 }
 
-/** Wire ReliefWeb situations to the application. */
+/** Wire GDACS disaster alerts to the application. */
 export function createApplicationCrises(options) {
   return createCrisesLayer({ ...pulseWiring(), ...options });
 }

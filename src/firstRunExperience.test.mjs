@@ -635,10 +635,11 @@ test('the voice TOOL SCHEMA matches the pinned contract — the mission mapping 
   // Street Level adds toggle enum values and the generated alias hint.
   // Flows adds refugees, migrant-stock and remittances to the layer enums.
   // Ground View rebrand: three descriptions say Ground View, not God's Eye View.
-  assert.equal(block.length, 30998, 'serialized tool schema length drifted');
+  // Disaster alerts: the crises layer gains the disasters, floods and cyclones aliases.
+  assert.equal(block.length, 31017, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    '9a944c31294dadb780b1b078c1b5a5fe27f1bf1676d0df5101caba7f597cc26c',
+    '97a59ffa74c7271a9dbdaee8ce61b44883b397e10288ce9157d7c87240c254f1',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
   const instructions = fs.readFileSync(new URL('../server/providers/openai/instructions.js', import.meta.url), 'utf8');
@@ -675,7 +676,7 @@ test('every layer a mission drives is already in the shipped set_layer_visibilit
 
 test('a key-gated or unavailable layer is skipped with a quiet note and the mission still succeeds', async () => {
   const states = {
-    crises: { name: 'Crises', keyRequired: true, keyLabel: 'ReliefWeb' },
+    crises: { name: 'Crises', keyRequired: true, keyLabel: 'Example' },
   };
   const spy = missionSpy({ layerResult: (id) => id !== 'crises' });
   const outcome = await runFirstRunChoice('pulse', {
@@ -685,7 +686,7 @@ test('a key-gated or unavailable layer is skipped with a quiet note and the miss
   assert.equal(outcome.ok, true);
   assert.deepEqual(outcome.failedLayerIds, []);
   assert.deepEqual(outcome.skipped.map((s) => s.layerId), ['crises']);
-  assert.equal(outcome.skipped[0].note, 'Crises needs a ReliefWeb key, skipped.');
+  assert.equal(outcome.skipped[0].note, 'Crises needs a Example key, skipped.');
   // Already-known gating never even attempts the enable.
   assert.deepEqual(spy.calls.layerIds, ['unrest', 'attention']);
 

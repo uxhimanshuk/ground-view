@@ -642,9 +642,9 @@ async function main() {
         before = await appState(page);
         await pick(page, mission.choice, { settle: mission.layers });
         state = await appState(page);
-        // Crises needs a ReliefWeb app name; a keyless server skips it with a
-        // quiet note by design, so it is optional here and reported either way.
-        const KEY_GATED = ['crises'];
+        // No mission layer needs a key now; the list stays so a future key-gated
+        // layer is skipped quietly and reported either way.
+        const KEY_GATED = [];
         const missing = mission.layers.filter((id) => !state.layers[id] && !KEY_GATED.includes(id));
         record(`${mission.label} enables its own layers`, missing.length === 0,
           missing.length ? `not enabled: ${missing.join(', ')}` : mission.layers.filter((id) => state.layers[id]).join(', '));

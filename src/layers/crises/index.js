@@ -10,15 +10,14 @@ export * from './model.js';
 export * from './records.js';
 export { createCrisesSource } from './source.js';
 
-/** Own the humanitarian situations display and its six-hour refresh lifecycle. */
+/** Own the GDACS disaster alerts display and its fifteen-minute refresh lifecycle. */
 export function createCrisesLayer({ source, ...options } = {}) {
   return createPulseLayer({
     id: 'crises',
-    name: 'Crises (ReliefWeb)',
-    icon: '🆘',
-    source: 'ReliefWeb',
-    updateInterval: 6 * 3_600_000,
-    requiresKeyId: 'reliefweb',
+    name: 'Disaster alerts (GDACS)',
+    icon: '🌪️',
+    source: 'GDACS',
+    updateInterval: 15 * 60_000,
     feed: source,
     spec: {
       style: crisisStyle,

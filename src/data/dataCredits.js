@@ -158,8 +158,8 @@ export const DATA_CREDITS = [
     html: 'Attention: most-read articles from the <a href="https://doc.wikimedia.org/generated-data-platform/aqs/analytics-api/" target="_blank" rel="noopener">Wikimedia pageviews API</a> (CC0). Pageviews include some automated traffic.',
   },
   {
-    key: 'reliefweb',
-    html: 'Crises: situations listed by <a href="https://reliefweb.int/" target="_blank" rel="noopener">ReliefWeb</a> (UN OCHA). Absence here is not absence of need.',
+    key: 'gdacs',
+    html: 'Disaster alerts: <a href="https://www.gdacs.org/" target="_blank" rel="noopener">GDACS</a> (United Nations and European Commission JRC). Automatic alerts estimated from hazard models; conflicts and epidemics are not covered.',
   },
   {
     key: 'nasa-gibs',

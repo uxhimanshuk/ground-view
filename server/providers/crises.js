@@ -1,86 +1,100 @@
 import { readResponseJsonCapped } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 
-// ReliefWeb API v2. Since late 2025 an approved appname is required (a made-up
-// one is answered with HTTP 403), so the name comes from the environment and
-// the proxy reports `keyRequired` honestly when it is absent.
-const API_URL = 'https://api.reliefweb.int/v2/disasters';
-const STATUSES = Object.freeze(['ongoing', 'alert']);
-const FIELDS = Object.freeze([
-  'name',
-  'status',
-  'glide',
-  'type',
-  'type.code',
-  'type.primary',
-  'country',
-  'country.iso3',
-  'country.primary',
-  'country.location',
-  'date',
-  'url',
-]);
-const TTL_MS = 6 * 3600_000;
-const STALE_LIMIT_MS = 24 * 3600_000;
+// GDACS (UN OCHA + European Commission JRC) event list, keyless. The API
+// answers at most 100 events per request and ignores paging, so Orange and Red
+// alerts are fetched in one request and Green alerts one hazard type at a time.
+const API_URL = 'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH';
+const EVENT_TYPES = Object.freeze(['EQ', 'TC', 'FL', 'VO', 'DR', 'WF']);
+const HIGH_WINDOW_DAYS = 30;
+const GREEN_WINDOW_DAYS = 14;
+const TTL_MS = 15 * 60_000;
+const STALE_LIMIT_MS = 6 * 3600_000;
 const RESPONSE_CAP = 4 * 1024 * 1024;
-const APPNAME_PATTERN = /^[A-Za-z0-9._-]{3,64}$/;
+const DAY_MS = 86_400_000;
 
-/** Build one fixed-origin ReliefWeb request URL. */
-export function reliefWebUrl(appname, status) {
+const isoDay = (ms) => new Date(ms).toISOString().slice(0, 10);
+
+/** Build one fixed-origin GDACS request URL. */
+export function gdacsUrl({ eventTypes, alertLevels, fromMs, toMs }) {
   const url = new URL(API_URL);
-  url.searchParams.set('appname', appname);
-  url.searchParams.set('filter[field]', 'status');
-  url.searchParams.set('filter[value]', status);
-  for (const field of FIELDS)
-    url.searchParams.append('fields[include][]', field);
-  url.searchParams.set('sort[]', 'date.event:desc');
-  url.searchParams.set('limit', '200');
-  return url.href;
+  // GDACS expects literal semicolons, so the lists are not percent-encoded.
+  return (
+    `${url.origin}${url.pathname}?eventlist=${eventTypes.join(';')}` +
+    `&fromdate=${isoDay(fromMs)}&todate=${isoDay(toMs)}` +
+    `&alertlevel=${alertLevels.join(';')}`
+  );
 }
 
-/** ReliefWeb disasters at `/api/crises`, cached for six hours. */
+/** The request plan: every Orange/Red alert, then recent Green ones by type. */
+export function gdacsRequests(nowMs) {
+  return [
+    gdacsUrl({
+      eventTypes: EVENT_TYPES,
+      alertLevels: ['Orange', 'Red'],
+      fromMs: nowMs - HIGH_WINDOW_DAYS * DAY_MS,
+      toMs: nowMs,
+    }),
+    ...EVENT_TYPES.map((type) =>
+      gdacsUrl({
+        eventTypes: [type],
+        alertLevels: ['Green'],
+        fromMs: nowMs - GREEN_WINDOW_DAYS * DAY_MS,
+        toMs: nowMs,
+      }),
+    ),
+  ];
+}
+
+/** GDACS disaster alerts at `/api/crises`, cached for fifteen minutes. */
 export function crisesProxy({
   fetchImpl = (...args) => globalThis.fetch(...args),
   now = () => Date.now(),
-  env = process.env,
 } = {}) {
   let cache = null;
   let inFlight = null;
   const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 600 });
 
-  async function load(appname) {
-    const data = [];
-    for (const status of STATUSES) {
-      const signal = AbortSignal.timeout(20_000);
-      const response = await fetchImpl(reliefWebUrl(appname, status), {
-        signal,
-        redirect: 'error',
-        headers: { Accept: 'application/json' },
-      });
-      if (!response.ok) {
-        await response.body?.cancel();
-        const error = new Error(`reliefweb_http_${response.status}`);
-        error.status = response.status;
-        throw error;
-      }
-      const payload = await readResponseJsonCapped(
-        response,
-        RESPONSE_CAP,
-        signal,
-      );
-      if (!Array.isArray(payload?.data))
-        throw new Error('invalid_reliefweb_payload');
-      data.push(...payload.data);
+  async function loadOne(requestUrl) {
+    const signal = AbortSignal.timeout(20_000);
+    const response = await fetchImpl(requestUrl, {
+      signal,
+      redirect: 'error',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      await response.body?.cancel();
+      const error = new Error(`gdacs_http_${response.status}`);
+      error.status = response.status;
+      throw error;
     }
+    const payload = await readResponseJsonCapped(
+      response,
+      RESPONSE_CAP,
+      signal,
+    );
+    if (!Array.isArray(payload?.features))
+      throw new Error('invalid_gdacs_payload');
+    return payload.features;
+  }
+
+  async function load() {
+    const settled = await Promise.allSettled(gdacsRequests(now()).map(loadOne));
+    // The Orange/Red request is the one that matters: without it, fail.
+    if (settled[0].status === 'rejected') throw settled[0].reason;
+    const data = settled.flatMap((r) =>
+      r.status === 'fulfilled' ? r.value : [],
+    );
     return { fetchedAt: now(), data };
   }
 
   function describe(extra) {
     return {
-      schemaVersion: 1,
-      source: 'ReliefWeb',
-      attribution: 'ReliefWeb · UN OCHA',
-      coverage: 'Disasters ReliefWeb lists as ongoing or on alert.',
+      schemaVersion: 2,
+      source: 'GDACS',
+      attribution: 'GDACS · United Nations and European Commission JRC',
+      coverage:
+        'Earthquakes, cyclones, floods, volcanoes, droughts and forest fires GDACS has alerted on.',
       fetchedAt: cache?.fetchedAt ?? null,
       stale: false,
       unavailable: false,
@@ -92,19 +106,9 @@ export function crisesProxy({
   }
 
   async function snapshot() {
-    const appname = String(env.RELIEFWEB_APPNAME || '').trim();
-    if (!APPNAME_PATTERN.test(appname)) {
-      return describe({
-        unavailable: true,
-        keyRequired: true,
-        data: [],
-        reason:
-          'ReliefWeb now requires an approved appname. Set RELIEFWEB_APPNAME to enable this layer.',
-      });
-    }
     if (cache && now() - cache.fetchedAt < TTL_MS) return describe({});
     if (!inFlight) {
-      inFlight = load(appname)
+      inFlight = load()
         .then((value) => {
           cache = value;
         })
@@ -115,20 +119,16 @@ export function crisesProxy({
     try {
       await inFlight;
       return describe({});
-    } catch (error) {
+    } catch {
       if (cache && now() - cache.fetchedAt < STALE_LIMIT_MS)
         return describe({
           stale: true,
-          reason: 'Cached data; ReliefWeb unavailable',
+          reason: 'Cached data; GDACS unavailable',
         });
       return describe({
         unavailable: true,
-        keyRequired: error?.status === 403,
         data: [],
-        reason:
-          error?.status === 403
-            ? 'ReliefWeb rejected the configured appname'
-            : 'ReliefWeb unavailable',
+        reason: 'GDACS unavailable',
       });
     }
   }
