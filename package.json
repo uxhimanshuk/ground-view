@@ -41,6 +41,8 @@
     "dev:secure": "./scripts/dev-secure.sh",
     "opensky:import": "./scripts/opensky-import-client.sh",
     "build": "vite build",
+    "build:static": "vite build --config server/standalone/vite.static.config.js",
+    "snapshots": "node scripts/build-snapshots.mjs out/",
     "build:panel": "node scripts/build-panel.mjs",
     "preview": "vite preview",
     "test": "node scripts/run-unit-tests.mjs",
