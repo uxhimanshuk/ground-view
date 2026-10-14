@@ -30,12 +30,13 @@ const TESTS = ['src/firstRunExperience.test.mjs', 'src/standalone/startupChrome.
 const FILES = {
   keyboard: path.join(ROOT, 'src', 'ui', 'surfaceKeyboard.js'),
   module: path.join(ROOT, 'src', 'firstRunExperience.js'),
-  html: path.join(ROOT, 'index.html'),
-  css: path.join(ROOT, 'style.css'),
+  html: path.join(ROOT, 'src', 'ui', 'templates', 'welcome.html'),
+  css: path.join(ROOT, 'src', 'ui', 'styles', 'first-run.css'),
   voiceInstructions: path.join(ROOT, 'server/providers/openai/instructions.js'),
-  voiceTools: path.join(ROOT, 'server/providers/openai/tools.js'),
-  main: path.join(ROOT, 'src', 'standalone', 'startupChrome.js'),
-  ui: path.join(ROOT, 'src', 'ui.js'),
+  voiceTools: path.join(ROOT, 'src/voice/actionSchemas.js'),
+  main: path.join(ROOT, 'src', 'app', 'startupChrome.js'),
+  ui: path.join(ROOT, 'src', 'ui', 'radioBindings.js'),
+  rail: path.join(ROOT, 'src', 'ui', 'panelPositionControls.js'),
   docs: path.join(ROOT, 'docs', 'CURRENT-STATE.md'),
 };
 
@@ -131,8 +132,8 @@ const MUTATIONS = [
   {
     defect: 'nothing watches for another surface taking the screen',
     file: 'module',
-    from: "surfaceObserver?.observe(documentRef.body, { attributes: true, attributeFilter: ['class'] });",
-    to: '/* observer never attached */',
+    from: 'surfaceObserver?.observe(documentRef.body, {',
+    to: 'void (documentRef.body, {',
   },
   {
     defect: 'cockpit drops off the exclusive list and can stack with the launcher',
@@ -219,13 +220,13 @@ const MUTATIONS = [
 
   {
     defect: 'the DISPLAY rail opens on first run again, stealing the impression',
-    file: 'ui',
+    file: 'rail',
     from: "if (panelId === 'pp-toggles' && stored === null) collapsed = true;",
     to: "if (panelId === 'pp-toggles' && stored === null) collapsed = false;",
   },
   {
     defect: 'the first-run rail default overrides a stored user choice',
-    file: 'ui',
+    file: 'rail',
     from: "if (panelId === 'pp-toggles' && stored === null) collapsed = true;",
     to: "if (panelId === 'pp-toggles') collapsed = true;",
   },
@@ -234,38 +235,38 @@ const MUTATIONS = [
   {
     defect: 'the removed INFRASTRUCTURE tile comes back as a one-click globe dump',
     file: 'module',
-    from: "  environmental: Object.freeze({",
-    to: "  infrastructure: Object.freeze({\n    kind: 'globe',\n    layerIds: Object.freeze(['local-datacenters', 'local-dams', 'telegeography-submarine-cables']),\n    busyText: 'Mapping global infrastructure…',\n  }),\n  environmental: Object.freeze({",
+    from: '  pulse: Object.freeze({',
+    to: '  infrastructure: Object.freeze({\n    kind: \'globe\',\n    layerIds: Object.freeze([\'local-datacenters\', \'local-dams\', \'telegeography-submarine-cables\']),\n    busyText: \'Mapping global infrastructure…\',\n  }),\n  pulse: Object.freeze({',
   },
   {
-    defect: 'ENVIRONMENTAL drops the keyless earthquakes that carry it without a key',
+    defect: 'PULSE drops unrest, its anchor layer',
     file: 'module',
-    from: "layerIds: Object.freeze(['earthquakes', 'local-firms']),",
-    to: "layerIds: Object.freeze(['local-firms']),",
+    from: 'layerIds: Object.freeze([\'unrest\', \'attention\', \'crises\']),',
+    to: 'layerIds: Object.freeze([\'attention\', \'crises\']),',
   },
   {
-    defect: 'FIRMS is dropped again from the tile whose subcopy promises it',
+    defect: 'FLOWS drops the refugee arcs it is named for',
     file: 'module',
-    from: "layerIds: Object.freeze(['earthquakes', 'local-firms']),",
-    to: "layerIds: Object.freeze(['earthquakes']),",
+    from: 'layerIds: Object.freeze([\'refugees\', \'migrant-stock\']),',
+    to: 'layerIds: Object.freeze([\'migrant-stock\']),',
   },
   {
-    defect: 'the tile stops promising the fires it actually turns on',
+    defect: 'the PULSE tile stops saying what it turns on',
     file: 'html',
-    from: '<small>Live earthquakes and active fires, from USGS and NASA</small>',
-    to: '<small>Live earthquakes worldwide, straight from USGS</small>',
+    from: '<small>Where unrest, news attention and crises are building today</small>',
+    to: '<small>A view of the world</small>',
   },
   {
-    defect: "the owner-authored first-run line is quietly rewritten",
+    defect: 'the upstream credit line loses its author names',
     file: 'html',
-    from: 'It feels like a forbidden cockpit—then you realize the sources are public and the data is real.',
-    to: "It feels like a forbidden cockpit. It isn't — every feed is public, and every contact is live.",
+    from: 'by Bilawal Sidhu and Sameh Khamis (MIT).',
+    to: 'by its authors.',
   },
   {
-    defect: 'the ledgered global-chip defect loses its pointer to the real fix',
-    file: 'module',
-    from: '    // means a KEY REQUIRED terminal state in src/loadingFeedback.js, a state',
-    to: '    // (note removed)',
+    defect: 'the upstream credit link is pointed elsewhere',
+    file: 'html',
+    from: 'https://github.com/bilawalsidhu/gods-eye-view',
+    to: 'https://example.invalid/',
   },
   {
     defect: 'the globe missions never pull the camera out',
@@ -276,8 +277,8 @@ const MUTATIONS = [
   {
     defect: 'a refused layer is reported as a successful mission',
     file: 'module',
-    from: 'return { ok: failedLayerIds.length === 0, choice, failedLayerIds };',
-    to: 'return { ok: true, choice, failedLayerIds };',
+    from: 'ok: failedLayerIds.length === 0 && enabledCount > 0,',
+    to: 'ok: true,',
   },
   {
     defect: 'a cancelled globe flight fails the whole mission',
@@ -298,10 +299,10 @@ const MUTATIONS = [
     to: 'if (!mission) return { ok: true, choice };',
   },
   {
-    defect: 'the fires/quakes tile name stops being switchable from one constant',
+    defect: 'a mission that enabled nothing is reported as a success',
     file: 'module',
-    from: 'return ENVIRONMENTAL_LABELS[choice] || ENVIRONMENTAL_LABELS.ENVIRONMENTAL;',
-    to: 'return ENVIRONMENTAL_LABELS.ENVIRONMENTAL;',
+    from: 'ok: failedLayerIds.length === 0 && enabledCount > 0,',
+    to: 'ok: failedLayerIds.length === 0,',
   },
 
   // ── Defaults interplay (the ruling this whole integration turns on) ────────
@@ -326,8 +327,8 @@ const MUTATIONS = [
   {
     defect: 'the Context panel is left collapsed, hiding the mode that just started',
     file: 'module',
-    from: "styleManager.setPanelCollapsed?.('global-context-panel', false, { explicit: true });",
-    to: '// panel reveal removed',
+    from: 'styleManager.setPanelCollapsed?.(\'global-context-panel\', false, {',
+    to: 'void (\'global-context-panel\', false, {',
   },
   {
     defect: 'the decision table is deleted, so the next editor re-litigates it blind',
@@ -411,14 +412,14 @@ const MUTATIONS = [
   {
     defect: 'a mission tile is dropped from the menu',
     file: 'html',
-    from: '      <button type="button" data-first-run-choice="space-missions">',
-    to: '      <button type="button" data-first-run-choice-disabled="space-missions">',
+    from: '<button type="button" data-first-run-choice="flows">',
+    to: '<button type="button" data-first-run-choice-disabled="flows">',
   },
   {
     defect: 'the menu order stops matching the owner\'s',
     file: 'html',
-    from: '<button type="button" data-first-run-choice="environmental">',
-    to: '<button type="button" data-first-run-choice="zzz-environmental">',
+    from: 'data-first-run-choice="global-context"',
+    to: 'data-first-run-choice="zzz-global-context"',
   },
   {
     defect: 'the "don\'t show again" checkbox is removed',
@@ -441,22 +442,22 @@ const MUTATIONS = [
   {
     defect: 'the launcher is revealed before the loading cover yields',
     file: 'main',
-    from: "      loadingScreen.classList.add('hidden');",
-    to: '      initFirstRunExperience({ styleManager, dataManager });\n      loadingScreen.classList.add(\'hidden\');',
+    from: 'loadingScreen.classList.add(\'hidden\');',
+    to: 'initializeWelcome?.({ styleManager, dataManager });\n      loadingScreen.classList.add(\'hidden\');',
   },
   {
     defect: 'the globe missions lose their DataManager and cannot enable layers',
     file: 'main',
-    from: 'initFirstRunExperience({ styleManager, dataManager });',
-    to: 'initFirstRunExperience({ styleManager });',
+    from: 'initializeWelcome?.({ styleManager, dataManager });',
+    to: 'initializeWelcome?.({ styleManager });',
   },
 
   // ── Voice: schema must not drift ──────────────────────────────────────────
   {
     defect: 'the voice TOOL SCHEMA is edited (a Realtime prompt-cache bust)',
     file: 'voiceTools',
-    from: "            'earthquakes',\n            'satellites',",
-    to: "            'earthquakes',\n            'infrastructure-mode',\n            'satellites',",
+    from: 'name: \'set_hud\',',
+    to: 'name: \'set_hud_x\',',
   },
   {
     defect: 'the instruction mapping is dropped, so voice cannot reach the modes',
@@ -465,6 +466,21 @@ const MUTATIONS = [
     to: "    // 'NAMED VIEWS are shorthand",
   },
 ];
+
+/**
+ * Anchors match modulo whitespace, so a formatter pass over a source file does
+ * not silently retire a mutation. Returns the mutated text, or null if absent.
+ */
+function applyMutation(source, from, to) {
+  const exact = source.indexOf(from);
+  if (exact >= 0) return source.slice(0, exact) + to + source.slice(exact + from.length);
+  const pattern = [...from.replace(/\s+/g, '')]
+    .map((char) => char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('\\s*');
+  const match = new RegExp(pattern).exec(source);
+  if (!match) return null;
+  return source.slice(0, match.index) + to + source.slice(match.index + match[0].length);
+}
 
 const originals = new Map();
 for (const [key, file] of Object.entries(FILES)) originals.set(key, fs.readFileSync(file, 'utf8'));
@@ -484,12 +500,13 @@ const missed = [];
 console.log(`\nFirst-run launcher pin strength — ${MUTATIONS.length} individual reverts\n`);
 for (const { defect, file, from, to } of MUTATIONS) {
   const original = originals.get(file);
-  if (!original.includes(from)) {
+  const mutated = applyMutation(original, from, to);
+  if (mutated === null) {
     missed.push(`${defect} (ANCHOR MISSING — the mutation no longer applies)`);
     console.log(`  \x1b[31mSTALE\x1b[0m ${defect}`);
     continue;
   }
-  write(FILES[file], original.replace(from, to));
+  write(FILES[file], mutated);
   let red = false;
   let by = '';
   try {

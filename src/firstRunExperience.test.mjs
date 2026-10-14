@@ -711,3 +711,32 @@ test('a key-gated or unavailable layer is skipped with a quiet note and the miss
   assert.equal(hardOutcome.ok, false);
   assert.deepEqual(hardOutcome.failedLayerIds, ['attention']);
 });
+
+test('the mission tiles say what they turn on, and the surface observer is attached', () => {
+  const html = fs.readFileSync(new URL('./ui/templates/welcome.html', import.meta.url), 'utf8');
+  const copy = (choice) => {
+    const tile = html.slice(html.indexOf(`data-first-run-choice="${choice}"`));
+    return tile.slice(0, tile.indexOf('</button>'));
+  };
+  assert.match(copy('global-context'), /Unrest, attention, crises, refugees and indicators/);
+  assert.match(copy('pulse'), /unrest, news attention and crises/);
+  assert.match(copy('flows'), /Refugee and migrant movements/);
+  const module = fs.readFileSync(new URL('./firstRunExperience.js', import.meta.url), 'utf8');
+  assert.match(
+    module,
+    /surfaceObserver\?\.observe\(documentRef\.body,\s*\{[^}]*attributeFilter: \['class'\]/,
+    'the launcher must watch the body class list for exclusive surfaces',
+  );
+});
+
+test('a mission whose every layer is skipped is not reported as a success', async () => {
+  const spy = missionSpy();
+  const gated = { name: 'Layer', keyRequired: true };
+  const outcome = await runFirstRunChoice('pulse', {
+    ...spy.deps,
+    getLayerState: () => gated,
+  });
+  assert.equal(outcome.ok, false);
+  assert.equal(outcome.skipped.length, 3);
+  assert.deepEqual(spy.calls.layerIds, []);
+});

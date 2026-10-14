@@ -70,6 +70,7 @@ async function section(name, body) {
 }
 
 const LAUNCHER = '#first-run-launcher';
+const GROUND_VIEW_LAYERS = ['unrest', 'attention', 'crises', 'refugees', 'migrant-stock', 'indicators'];
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
@@ -105,7 +106,7 @@ const launcherVisible = (page) => page.evaluate(
   LAUNCHER,
 );
 
-const appState = (page) => page.evaluate(() => {
+const appState = (page) => page.evaluate((groundViewLayers) => {
   const gev = window.__godsEyeView || {};
   const sm = gev.styleManager;
   const dm = gev.dataManager;
@@ -116,6 +117,7 @@ const appState = (page) => page.evaluate(() => {
   for (const id of [
     'local-datacenters', 'local-dams', 'telegeography-submarine-cables',
     'local-firms', 'earthquakes', 'flights', 'military', 'rocket-launches', 'satellites',
+    ...groundViewLayers,
   ]) {
     layers[id] = !!dm?.isEnabled?.(id);
     counts[id] = all.find((entry) => entry.id === id)?.stats?.count ?? null;
@@ -134,7 +136,7 @@ const appState = (page) => page.evaluate(() => {
     layerStateBlob: localStorage.getItem('gev:layer-state:v2'),
     allocation: localStorage.getItem('gev:detection-allocation:v1'),
   };
-});
+}, GROUND_VIEW_LAYERS);
 
 /**
  * Click a mission tile, wait for the launcher to close, then let the layers it
@@ -190,7 +192,7 @@ async function pick(page, choice, { timeout = 40000, settle = [] } = {}) {
 /** Every section the run is expected to reach; the teeth verdict requires all. */
 const EXPECTED_SECTIONS = [
   'show-policy', 'esc-arbitration',
-  'mission-environmental', 'mission-contacts', 'mission-space', 'mission-explore',
+  'mission-global-context', 'mission-pulse', 'mission-flows', 'mission-explore',
   'viewports', 'console',
 ];
 
@@ -530,7 +532,7 @@ async function main() {
       if (freshVisible) shots.push(await shoot(page, 'launcher-desktop'));
 
       const focused = await page.evaluate(() => document.activeElement?.dataset?.firstRunChoice ?? null);
-      record('focus lands on the first mission tile', focused === 'contacts', `activeElement=${focused}`);
+      record('focus lands on the first mission tile', focused === 'global-context', `activeElement=${focused}`);
 
       // The card is a flex column (so its list can scroll on short viewports),
       // and an author `display` on this id outranks the UA's `[hidden]` rule.
@@ -550,9 +552,19 @@ async function main() {
       const tiles = await page.$$eval('[data-first-run-choice]', (nodes) => nodes.map((n) => n.dataset.firstRunChoice));
       record(
         'four tiles in the owner\'s order',
-        JSON.stringify(tiles) === JSON.stringify(['contacts', 'space-missions', 'environmental', 'explore']),
+        JSON.stringify(tiles) === JSON.stringify(['global-context', 'pulse', 'flows', 'explore']),
         tiles.join(' · '),
       );
+
+      const credit = await page.$eval('.first-run-credit', (node) => ({
+        text: node.textContent.trim(),
+        href: node.querySelector('a')?.href ?? null,
+      })).catch(() => null);
+      record('the launcher credits God\'s Eye View with a link',
+        !!credit && /God's Eye View/.test(credit.text) && /bilawalsidhu\/gods-eye-view/.test(credit.href ?? ''),
+        credit ? credit.text : 'no credit line');
+      const copy = await page.$eval(LAUNCHER, (node) => node.textContent).catch(() => '');
+      record('the launcher copy has no em-dashes', !copy.includes('\u2014'));
 
       // ESC dismisses. Stated as a TRANSITION (was up, now gone) — "not visible"
       // alone passes vacuously whenever the launcher never appeared at all.
@@ -609,109 +621,49 @@ async function main() {
     // tally reports "reached" for assertions that never ran.
     let state;
     let before;
-    await section('mission-environmental', async () => {
-    // Full clear, not just the session: layer enables are DURABLE, so without it
-    // an earlier mission's layers ride along and this stops measuring
-    // Environmental alone (and its screenshot stops showing it alone).
-    await open(page, { query: "?welcome=1", errorSink: consoleErrors });
-    before = await appState(page);
-    await watchLoadingChip(page);
-    await pick(page, 'environmental', { settle: ['earthquakes', 'local-firms'] });
-    state = await appState(page);
-    record('ENVIRONMENTAL leaves the detection override untouched',
-      state.detectionOverridden === false, `_detectionUserOverridden=${state.detectionOverridden}`);
-    record('a mission never auto-suppresses itself', state.durable === null, `durable=${state.durable}`);
-    record('a mission never writes the detection-allocation pref',
-      state.allocation === before.allocation, `${before.allocation} → ${state.allocation}`);
-    record('ENVIRONMENTAL enables BOTH of its feeds', state.layers.earthquakes && state.layers['local-firms'],
-      `quakes=${state.layers.earthquakes} fires=${state.layers['local-firms']}`);
-    record('ENVIRONMENTAL loads real quake records', (state.counts.earthquakes ?? 0) > 0,
-      `${state.counts.earthquakes} quakes`);
-    record('ENVIRONMENTAL reaches the full-earth camera', state.heightKm !== null && state.heightKm > 12000,
-      `${state.heightKm} km`);
-
-    /*
-     * The tile optimizes for the FULLY CONFIGURED app, so the assertion splits
-     * on what this server actually has rather than pretending one answer fits
-     * both. The branch is reported, so a green run always says which one it was.
-     *
-     *   KEYED   — both datasets must actually arrive, and a failure banner in
-     *             that state is a real defect, so the chip IS asserted.
-     *   KEYLESS — only the LAYER ROW is asserted: FIRMS reports KEY REQUIRED,
-     *             which is the honest surface a keyless visitor is judged on.
-     *             The GLOBAL chip is deliberately NOT asserted in either
-     *             direction here: it has no key-required terminal state and
-     *             folds that row into a misleading LOAD FAILED. That
-     *             aggregation is a defect in the shared state machine
-     *             (`src/loadingFeedback.js`), LEDGERED post-launch — it is not
-     *             a desirable outcome and not this tile's contract.
-     */
-    const keyless = state.firmsError === 'KEY REQUIRED';
-    console.log(`  \x1b[2m   FIRMS key state: ${keyless ? 'KEYLESS' : 'KEYED'} `
-      + `(row="${state.firmsError ?? 'none'}", count=${state.firmsCount})\x1b[0m`);
-    if (keyless) {
-      record(
-        'KEYLESS: the FIRMS row tells the visitor the truth (KEY REQUIRED)',
-        state.firmsError === 'KEY REQUIRED',
-        `layer row reports "${state.firmsError}"`,
-      );
-      record(
-        'KEYLESS: the quakes half of the tile still delivers in full',
-        (state.counts.earthquakes ?? 0) > 0,
-        `${state.counts.earthquakes} quakes`,
-      );
-    } else {
-      record(
-        'KEYED: both datasets actually arrive',
-        (state.counts.earthquakes ?? 0) > 0 && (state.firmsCount ?? 0) > 0,
-        `${state.counts.earthquakes} quakes · ${state.firmsCount} fire detections`,
-      );
-      const chip = await readLoadingChip(page);
-      const failed = chip.filter((entry) => /LOAD FAILED/i.test(entry));
-      // A STALE served-from-cache FIRMS payload is degraded, not failed, and it
-      // still carries data — so the failure test is the banner, not any
-      // non-empty error string.
-      record(
-        'KEYED: no unexpected global failure while the mission runs',
-        failed.length === 0,
-        failed.length
-          ? `chip showed: ${failed.join(' | ')}`
-          : `firms row="${state.firmsError ?? 'none'}"; chip states seen: ${chip.join(' → ') || 'none'}`,
-      );
+    // Each globe mission must enable its own layers (and only those), leave the
+    // detection preference and the durable suppression alone, and end at globe
+    // scale. A feed that is down is skipped by design, so enablement is the
+    // contract here, not row counts; counts are printed for the reader.
+    const GLOBE_MISSIONS = [
+      {
+        choice: 'global-context',
+        label: 'GLOBAL CONTEXT',
+        layers: ['unrest', 'attention', 'crises', 'refugees', 'indicators'],
+      },
+      { choice: 'pulse', label: 'PULSE', layers: ['unrest', 'attention', 'crises'] },
+      { choice: 'flows', label: 'FLOWS', layers: ['refugees', 'migrant-stock'] },
+    ];
+    for (const mission of GLOBE_MISSIONS) {
+      await section(`mission-${mission.choice}`, async () => {
+        // Full clear: layer enables are DURABLE, so without it an earlier
+        // mission's layers ride along and this stops measuring one mission.
+        await open(page, { query: '?welcome=1', errorSink: consoleErrors });
+        before = await appState(page);
+        await pick(page, mission.choice, { settle: mission.layers });
+        state = await appState(page);
+        // Crises needs a ReliefWeb app name; a keyless server skips it with a
+        // quiet note by design, so it is optional here and reported either way.
+        const KEY_GATED = ['crises'];
+        const missing = mission.layers.filter((id) => !state.layers[id] && !KEY_GATED.includes(id));
+        record(`${mission.label} enables its own layers`, missing.length === 0,
+          missing.length ? `not enabled: ${missing.join(', ')}` : mission.layers.filter((id) => state.layers[id]).join(', '));
+        const skippedGated = mission.layers.filter((id) => !state.layers[id] && KEY_GATED.includes(id));
+        if (skippedGated.length) console.log(`  \x1b[2m   skipped (key-gated): ${skippedGated.join(', ')}\x1b[0m`);
+        const dropped = GROUND_VIEW_LAYERS.filter((id) => before.layers[id] && !state.layers[id] && !KEY_GATED.includes(id));
+        record(`${mission.label} switches off none of the defaults it found`, dropped.length === 0,
+          dropped.length ? `now off: ${dropped.join(', ')}` : 'defaults kept');
+        record(`${mission.label} leaves the detection override untouched`,
+          state.detectionOverridden === false, `_detectionUserOverridden=${state.detectionOverridden}`);
+        record(`${mission.label} never auto-suppresses itself`, state.durable === null, `durable=${state.durable}`);
+        record(`${mission.label} never writes the detection-allocation pref`,
+          state.allocation === before.allocation, `${before.allocation} → ${state.allocation}`);
+        record(`${mission.label} ends at globe scale`, state.heightKm !== null && state.heightKm > 12000,
+          `${state.heightKm} km`);
+        console.log(`  \x1b[2m   row counts: ${mission.layers.map((id) => `${id}=${state.counts[id] ?? 'n/a'}`).join(' ')}\x1b[0m`);
+        shots.push(await shoot(page, `mission-${mission.choice}`));
+      });
     }
-    record(
-      'no mission turns on the bundled infrastructure layers any more',
-      !state.layers['local-datacenters'] && !state.layers['local-dams']
-        && !state.layers['telegeography-submarine-cables'],
-      'the removed tile left nothing enabling ~5,700 entities at globe scale',
-    );
-    shots.push(await shoot(page, 'mission-environmental'));
-    });
-
-    await section('mission-contacts', async () => {
-    await open(page, { query: "?welcome=1", errorSink: consoleErrors });
-    await pick(page, 'contacts');
-    state = await appState(page);
-    record('LIVE CONTACTS activates the Contacts context mode', state.contextMode === 'flights',
-      `contextMode=${state.contextMode}`);
-    const panelOpen = await page.evaluate(() => {
-      const panel = document.getElementById('global-context-panel');
-      return !!panel && !panel.classList.contains('collapsed');
-    });
-    record('LIVE CONTACTS reveals the Context panel', panelOpen);
-    record('LIVE CONTACTS still leaves the detection override untouched',
-      state.detectionOverridden === false, `_detectionUserOverridden=${state.detectionOverridden}`);
-    shots.push(await shoot(page, 'mission-contacts'));
-    });
-
-    await section('mission-space', async () => {
-    await open(page, { query: "?welcome=1", errorSink: consoleErrors });
-    await pick(page, 'space-missions');
-    state = await appState(page);
-    record('SPACE MISSIONS activates its context mode', state.contextMode === 'space-missions',
-      `contextMode=${state.contextMode}`);
-    shots.push(await shoot(page, 'mission-space-missions'));
-    });
 
     await section('mission-explore', async () => {
     await open(page, { query: "?welcome=1", errorSink: consoleErrors });
@@ -719,13 +671,14 @@ async function main() {
     await pick(page, 'explore');
     state = await appState(page);
     record('EXPLORE MANUALLY enables no layer and no context mode',
-      Object.values(state.layers).every((on) => !on) && state.contextMode === null,
-      Object.entries(state.layers).filter(([, on]) => on).map(([id]) => id).join(', ') || 'nothing enabled');
+      GROUND_VIEW_LAYERS.every((id) => state.layers[id] === beforeExplore.layers[id]) && state.contextMode === null,
+      'Ground View layers unchanged by the click');
     // The real claim is that Explore issues no camera command of its own: the
     // arrival fly-in owns the camera and must still be heading down, not out.
     record('EXPLORE MANUALLY never commandeers the camera',
-      (state.heightKm ?? 0) < 12000 && (state.heightKm ?? 1e9) <= (beforeExplore.heightKm ?? 1e9),
-      `${beforeExplore.heightKm} → ${state.heightKm} km (globe would be 18000)`);
+      state.heightKm !== null && beforeExplore.heightKm !== null
+        && Math.abs(state.heightKm - beforeExplore.heightKm) <= beforeExplore.heightKm * 0.05,
+      `${beforeExplore.heightKm} → ${state.heightKm} km (no camera command of its own)`);
     shots.push(await shoot(page, 'mission-explore'));
     });
 
