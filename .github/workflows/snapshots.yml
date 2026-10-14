@@ -1,0 +1,50 @@
+# Refreshes the JSON snapshots the static Ground View demo reads in place of its
+# four server-backed feeds (unrest, news tone, attention, crises). The result is
+# force-pushed as a single-commit orphan branch `snapshots`, so history stays one
+# commit and the site reads https://raw.githubusercontent.com/<repo>/snapshots/<file>.
+# No secrets: GITHUB_TOKEN with contents: write is enough.
+name: snapshots
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: snapshots
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # The script needs no npm install: it uses only Node built-ins and the
+      # repository's own provider code. If a feed fails it keeps that feed's
+      # previous file (read from the live `snapshots` branch) and marks it stale
+      # in manifest.json; it exits non-zero only when no feed has a file at all.
+      - name: Build snapshots
+        run: >-
+          node scripts/build-snapshots.mjs out
+          --previous-base "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/snapshots/"
+
+      - name: Publish the snapshots branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd out
+          git init --quiet --initial-branch=snapshots
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit --quiet --message "Snapshots $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" snapshots
