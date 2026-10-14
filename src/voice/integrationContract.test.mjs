@@ -343,12 +343,13 @@ test('the cloud prompt states precedence and caveat speech once', () => {
     'named → pointing → Contacts/selection → view',
   );
   const tools = JSON.stringify(GEV_REALTIME_TOOLS);
-  // Caveat speech is one policy: lower bounds and partial answers are spoken.
+  // Caveat speech is one policy: a quoted layer number carries its caveat,
+  // and lower bounds and partial answers are spoken.
   const caveatRules = lines.filter((line) => /caveat/i.test(line));
   assert.equal(caveatRules.length, 1, caveatRules.join('\n'));
   assert.match(
     caveatRules[0],
-    /speak a caveat only when it changes the answer/,
+    /Whenever you quote a number from a layer, also say that layer's caveat/,
   );
   assert.match(caveatRules[0], /Lower bounds \("at least 500"\)/);
   assert.doesNotMatch(tools, /mention display\.caveat/);

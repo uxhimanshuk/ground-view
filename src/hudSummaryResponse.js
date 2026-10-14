@@ -48,7 +48,8 @@ export function isHudSummaryUnconfigured(status, data) {
  * nominal.
  */
 export const HUD_SUMMARY_INSTRUCTIONS = [
-  "Write one concise intelligence-HUD summary for God's Eye View.",
+  'Write one concise HUD summary for Ground View, as a social research analyst describing aggregate patterns.',
+  'Never speculate about or identify individuals, and describe only places, regions and layers.',
   'Use only the supplied place, street, nearby-place, enabled-layer labels, and feedProvenance.',
   'Prefer the clearest named place and include a relevant enabled layer only when useful.',
   'If any enabled layer is not nominal, the five words MUST include that feedState token (STALE, DEGRADED, FALLBACK, LOADING, or UNAVAILABLE) and must not present the view as live.',
