@@ -302,9 +302,9 @@ const KEY_LABELS = Object.freeze({ reliefweb: 'ReliefWeb' });
 
 /** Quiet one-liner for a layer a mission skipped. No em-dashes. */
 function skipNote(layerId, state) {
-  const label = String(state?.name || layerId).replace(/^./, (c) =>
-    c.toUpperCase(),
-  );
+  const label = String(state?.name || layerId)
+    .replace(/\s*\(.*\)\s*$/, '')
+    .replace(/^./, (c) => c.toUpperCase());
   if (state?.keyRequired) {
     const key = state.keyLabel ? `a ${state.keyLabel} key` : 'an API key';
     return `${label} needs ${key}, skipped.`;
