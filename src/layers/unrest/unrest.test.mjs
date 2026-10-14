@@ -189,9 +189,10 @@ test('card shows place, 24h count, up to three links, source, as-of and the cave
   assert.ok(!JSON.stringify(card).includes(String.fromCharCode(0x2014)));
 });
 
-test('feed state flags the export path as fallback and a short window as partial', () => {
+test('feed state treats the export files as the normal source and a short window as partial', () => {
   const { meta } = normalizeUnrestSnapshot(payload());
-  assert.equal(unrestStats(meta).fallback, true);
+  assert.equal(unrestStats(meta).fallback, false);
+  assert.equal(unrestStats(meta).coverage, 'GDELT 2.0 event files, last 24 h');
   assert.equal(unrestStats(meta).partial, false);
   assert.equal(unrestStats({ ...meta, slicesLoaded: 10 }).partial, true);
   assert.equal(unrestStats({ ...meta, stale: true }).stale, true);

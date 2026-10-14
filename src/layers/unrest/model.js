@@ -87,17 +87,17 @@ export function mapUnrestAnalystRecord(row) {
   };
 }
 
-/** Feed-state fields: the export is the fallback path, a partial window is partial. */
+/** Feed-state fields: the export files are the normal source (GDELT's GEO API is gone), a partial window is partial. */
 export function unrestStats(meta) {
   const expected = meta.slicesExpected || 0;
   return {
     stale: meta.stale === true,
-    fallback: meta.mode !== 'geo',
+    fallback: false,
     partial: expected > 0 && meta.slicesLoaded < Math.ceil(expected * 0.75),
     coverage:
       meta.mode === 'geo'
         ? 'GDELT GEO 2.0'
-        : 'GDELT 2.0 15-minute export (GEO API unavailable)',
+        : 'GDELT 2.0 event files, last 24 h',
     asOf: meta.newestSliceAt,
   };
 }

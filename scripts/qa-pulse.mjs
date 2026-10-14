@@ -6,7 +6,7 @@
  * (default :4577), using live data:
  *
  *   (i)   UNREST    loads protest clusters from /api/unrest, no error,
- *                   feed state reads FALLBACK (the GDELT export path).
+ *                   feed state reads ON (the GDELT export files are the normal source).
  *   (ii)  ATTENTION loads per-language top articles straight from Wikimedia.
  *   (iii) CRISES    loads GDACS disaster alerts (keyless)
  *                   on the server, otherwise reports keyRequired honestly.
@@ -137,7 +137,7 @@ async function main() {
 
     const unrest = await enableAndSettle(page, 'unrest');
     record('(i) unrest loads clusters', unrest?.count > 0 && !unrest.error, JSON.stringify(unrest));
-    record('(i) unrest feed state is FALLBACK (export path)', unrest?.fallback === true);
+    record('(i) unrest feed state is not FALLBACK (export files are the normal source)', unrest?.fallback === false);
     const unrestCard = await clickFirstMarker(page, 'unrest');
     record(
       '(iv) unrest marker click opens a card with caveat and http(s) links',
