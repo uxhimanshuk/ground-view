@@ -397,9 +397,23 @@ async function openLegacyLayers(page) {
   );
 }
 
+// A fresh visit starts with the Ground View defaults on. Their markers and the
+// raised refugee arcs can sit over Mapillary's sequences and cones and take the
+// pick, so clear them to test Street Level on its own, as qa-structure does.
+async function clearGroundViewDefaults(page) {
+  await page.waitForFunction(() => window.__godsEyeView?.dataManager, {
+    timeout: 60_000,
+  });
+  await page.evaluate(async () => {
+    for (const id of ['unrest', 'attention', 'refugees'])
+      await window.__godsEyeView.dataManager.setEnabled(id, false);
+  });
+}
+
 export async function boot(page, url) {
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await clearFirstRun(page);
+  await clearGroundViewDefaults(page);
   await openLegacyLayers(page);
 }
 
