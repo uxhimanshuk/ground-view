@@ -28,6 +28,7 @@ import { cycloneProxy } from './cyclones.js';
 import { unrestProxy } from './unrest.js';
 import { crisesProxy } from './crises.js';
 import { attentionProxy } from './attention.js';
+import { newsToneProxy } from './newsTone.js';
 import { windProxy } from './wind.js';
 
 /**
@@ -64,6 +65,7 @@ function localProviderPlugins({ realtime } = {}) {
     unrestProxy(),
     crisesProxy(),
     attentionProxy(),
+    newsToneProxy(),
     mapillaryProxy(),
     firePerimetersProxy(),
     keySetupEndpoint(),

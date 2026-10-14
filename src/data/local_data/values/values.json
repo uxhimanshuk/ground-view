@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "placeholder": true,
+    "title": "Inglehart-Welzel cultural map country scores",
+    "note": "PLACEHOLDER. No citable published table of country-level scores could be obtained when this layer was built, so no values are shipped and none were invented. Replace this file by running scripts/build-values.mjs on a real table (see values.LICENSE.md).",
+    "dimensions": {
+      "tradSecular": "Traditional (negative) to secular-rational (positive)",
+      "survSelfExpr": "Survival (negative) to self-expression (positive)"
+    },
+    "source": null,
+    "wave": null,
+    "retrieved": null
+  },
+  "countries": []
+}

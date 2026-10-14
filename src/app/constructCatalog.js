@@ -29,6 +29,12 @@ import {
   createApplicationAttention,
   createApplicationCrises,
 } from './layers/pulse.js';
+import {
+  createApplicationIndicators,
+  createApplicationValues,
+  createApplicationLanguages,
+  createApplicationNewsTone,
+} from './layers/structure.js';
 import { createApplicationFirePerimeters } from './layers/perimeters.js';
 import { createApplicationCables } from './layers/submarineCables.js';
 import {
@@ -130,6 +136,10 @@ export function createApplicationCatalog({
         createApplicationUnrest({ source: sources.unrest }),
         createApplicationAttention({ source: sources.attention }),
         createApplicationCrises({ source: sources.crises }),
+        createApplicationIndicators({ source: sources.indicators }),
+        createApplicationValues({ source: sources.values }),
+        createApplicationLanguages({ source: sources.languages }),
+        createApplicationNewsTone({ source: sources['news-tone'] }),
         createApplicationFirePerimeters({
           source: sources['fire-perimeters'],
         }),

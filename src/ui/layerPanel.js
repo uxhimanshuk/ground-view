@@ -29,6 +29,10 @@ const PANEL_GROUPS = [
     ids: ['refugees', 'migrant-stock', 'remittances'],
   },
   {
+    label: 'Structure',
+    ids: ['indicators', 'values', 'languages', 'news-tone'],
+  },
+  {
     label: 'Movement',
     ids: [
       'satellites',

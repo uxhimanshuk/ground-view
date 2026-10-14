@@ -16,6 +16,10 @@ test('reference factories retain compatibility without starting acquisition or s
     'earthquakes',
     'fire-perimeters',
     'cables',
+    'indicators',
+    'values',
+    'languages',
+    'news-tone',
   ]);
   assert.notEqual(first.earthquakes, second.earthquakes);
   assert.notEqual(first['fire-perimeters'], second['fire-perimeters']);

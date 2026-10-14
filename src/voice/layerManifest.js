@@ -456,6 +456,69 @@ const layers = [
     noQuery: 'cable records are not loaded for queries',
   },
   {
+    id: 'indicators',
+    aliases: ['indicators', 'world bank', 'country statistics'],
+    context: false,
+    query: {
+      fields: {
+        name: ['t'],
+        country: ['t'],
+        value: ['n'],
+        unit: ['t'],
+        indicator: ['t'],
+        year: ['n'],
+        rank: ['n'],
+      },
+    },
+  },
+  {
+    id: 'values',
+    aliases: ['values map', 'cultural values', 'inglehart welzel'],
+    context: false,
+    query: {
+      fields: {
+        name: ['t'],
+        country: ['t'],
+        value: ['n'],
+        unit: ['t'],
+        indicator: ['t'],
+        year: ['n'],
+        rank: ['n'],
+      },
+    },
+  },
+  {
+    id: 'languages',
+    aliases: ['languages', 'world languages', 'glottolog'],
+    context: false,
+    query: {
+      fields: {
+        name: ['t'],
+        glottocode: ['t'],
+        iso639_3: ['t'],
+        macroarea: ['t'],
+        endangerment: ['t'],
+        value: ['n'],
+      },
+    },
+  },
+  {
+    id: 'news-tone',
+    aliases: ['news tone', 'media tone', 'gdelt'],
+    context: false,
+    query: {
+      fields: {
+        name: ['t'],
+        country: ['t'],
+        value: ['n'],
+        unit: ['t'],
+        indicator: ['t'],
+        year: ['n'],
+        rank: ['n'],
+      },
+    },
+  },
+  {
     // Global Context owns this layer; voice reaches it through
     // set_context_mode, never a bare toggle.
     id: 'military-awareness',
