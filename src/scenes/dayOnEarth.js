@@ -151,6 +151,64 @@ const pose = (lat, lon, alt, extra = {}) => ({
   ...extra,
 });
 
+const toRad = (deg) => (deg * Math.PI) / 180;
+const toDeg = (rad) => (rad * 180) / Math.PI;
+
+/**
+ * Camera pose that LOOKS AT a ground point. The director flies the camera TO a
+ * position with a heading and pitch, so a tilted pose placed above the target
+ * would aim past it and leave the target off the bottom edge. This moves the
+ * camera back along the heading until the line of sight meets the ground at
+ * (lat, lon): the target sits at the centre of the frame.
+ *
+ * `alt` is the camera height in metres. Geometry is spherical: with the ray
+ * `a` degrees off the nadir, the central angle between the camera's nadir and
+ * the aim point is asin((R + alt) / R * sin a) - a.
+ */
+export function lookAtPose(lat, lon, alt, { heading = 0, pitch = -90 } = {}) {
+  const base = pose(lat, lon, alt, { heading, pitch });
+  const nadirAngle = toRad(90 + pitch); // pitch -90 looks straight down
+  const ratio =
+    ((EARTH_RADIUS_KM * 1000 + alt) / (EARTH_RADIUS_KM * 1000)) *
+    Math.sin(nadirAngle);
+  if (nadirAngle <= 0 || ratio >= 1) return base;
+  const back = Math.asin(ratio) - nadirAngle; // radians along the ground
+  // Walk `back` radians from a point along a bearing (great circle).
+  const walk = (la, lo, bearing) => {
+    const phi = toRad(la);
+    const lat2 = Math.asin(
+      Math.sin(phi) * Math.cos(back) +
+        Math.cos(phi) * Math.sin(back) * Math.cos(bearing),
+    );
+    const lon2 =
+      toRad(lo) +
+      Math.atan2(
+        Math.sin(bearing) * Math.sin(back) * Math.cos(phi),
+        Math.cos(back) - Math.sin(phi) * Math.sin(lat2),
+      );
+    return { lat: toDeg(lat2), lon: toDeg(lon2) };
+  };
+  // The bearing changes along a great circle, so stepping back from the
+  // target by the reverse heading is only a first guess. Refine until a step
+  // FORWARD from the camera, along the heading, lands on the target.
+  let cam = walk(lat, lon, toRad(heading + 180));
+  for (let i = 0; i < 8; i += 1) {
+    const landed = walk(cam.lat, cam.lon, toRad(heading));
+    cam = {
+      lat: cam.lat + (lat - landed.lat),
+      lon: cam.lon + (lon - landed.lon),
+    };
+  }
+  return {
+    ...base,
+    lat: cam.lat,
+    lon: ((cam.lon + 540) % 360) - 180,
+  };
+}
+
+const EUROPE = Object.freeze({ lat: 50, lon: 12 });
+const SOUTH_ASIA = Object.freeze({ lat: 23, lon: 80 });
+
 /** The recipe, in the same shape as every other entry in recipes.js. */
 export const DAY_ON_EARTH_RECIPE = Object.freeze({
   id: 'a-day-on-earth',
@@ -186,10 +244,12 @@ export const DAY_ON_EARTH_RECIPE = Object.freeze({
     },
     'Europe reads': {
       requires: ['attention'],
+      target: EUROPE,
       resolve: 'attention-caption',
     },
     'South Asia reads': {
       requires: ['attention'],
+      target: SOUTH_ASIA,
       caption:
         'South Asia reads in many languages at once, and each pin shows a different front page. Source: Wikimedia pageviews.',
     },
@@ -235,21 +295,23 @@ export const DAY_ON_EARTH_RECIPE = Object.freeze({
     },
     {
       title: 'Densest unrest',
-      ...pose(20, 20, 3_000_000, { pitch: -60 }),
+      ...lookAtPose(20, 20, 3_000_000, { pitch: -60 }),
       duration: 6,
       hold: 5,
       layers: stage(['unrest']),
     },
     {
       title: 'Europe reads',
-      ...pose(50, 12, 4_200_000, { pitch: -70 }),
+      ...lookAtPose(EUROPE.lat, EUROPE.lon, 4_200_000, { pitch: -70 }),
       duration: 5,
       hold: 3,
       layers: stage(['unrest', 'attention']),
     },
     {
       title: 'South Asia reads',
-      ...pose(23, 80, 4_800_000, { pitch: -70 }),
+      ...lookAtPose(SOUTH_ASIA.lat, SOUTH_ASIA.lon, 4_800_000, {
+        pitch: -70,
+      }),
       duration: 5,
       hold: 3,
       layers: stage(['unrest', 'attention']),
@@ -263,7 +325,7 @@ export const DAY_ON_EARTH_RECIPE = Object.freeze({
     },
     {
       title: 'Top asylum country',
-      ...pose(30, 30, 4_000_000, { pitch: -70 }),
+      ...lookAtPose(30, 30, 4_000_000, { pitch: -70 }),
       duration: 5,
       hold: 5,
       layers: stage(['refugees']),
@@ -303,7 +365,8 @@ export const BEAT_RESOLVERS = Object.freeze({
     const hot = pickUnrestHotspot(ctx.records('unrest'));
     if (!hot) return { skip: true };
     return {
-      camera: pose(hot.lat, hot.lon, 2_800_000, { pitch: -60 }),
+      camera: lookAtPose(hot.lat, hot.lon, 2_800_000, { pitch: -60 }),
+      target: { lat: hot.lat, lon: hot.lon },
       caption: `The densest region right now is around ${hot.place}: ${countText(hot.reports)} protest and strike reports within ${HOTSPOT_RADIUS_KM} km in 24 hours. Source: GDELT.`,
     };
   },
@@ -311,9 +374,13 @@ export const BEAT_RESOLVERS = Object.freeze({
     const top = pickTopAsylum(ctx.records('refugees'));
     if (!top) return { skip: true };
     ctx.setParams('refugees', { isolated: top.iso3 });
+    // The caption says what the country card would, and a card anchored at the
+    // frame centre would sit under it. Captions never share space with a card.
+    ctx.suppressCards?.('refugees', true);
     const when = top.year ? `, ${top.year}` : '';
     return {
-      camera: pose(top.lat, top.lon, 3_800_000, { pitch: -70 }),
+      camera: lookAtPose(top.lat, top.lon, 3_800_000, { pitch: -70 }),
+      target: { lat: top.lat, lon: top.lon },
       caption: `${top.name} took in the most refugees and asylum-seekers in this data: ${peopleText(top.people)} people from ${top.origins} countries${when}. Source: UNHCR.`,
     };
   },
@@ -328,8 +395,8 @@ export const BEAT_RESOLVERS = Object.freeze({
     };
   },
   async finale(ctx, beat) {
-    // Crises needs an approved key on some servers. Use it only when it is
-    // there, so the last view never carries a layer that cannot load.
+    // Use disaster alerts only when they loaded, so the last view never
+    // carries a layer that cannot.
     const crises = ctx.stats('crises');
     const usable = crises && !crises.keyRequired && !crises.unavailable;
     return {

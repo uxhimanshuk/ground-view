@@ -66,6 +66,10 @@ export function createSceneBeats({
     }
   };
 
+  // Layers whose selection cards this run suppressed, restored in clear().
+  const cardsSuppressed = new Set();
+  let currentTarget = null;
+
   /** 'ready' | 'unavailable' | 'timeout' | 'cancelled' */
   async function waitForData(layerIds, token, timeoutMs) {
     const deadline = Date.now() + timeoutMs;
@@ -107,6 +111,7 @@ export function createSceneBeats({
      * beat changed it) and shows or hides the caption.
      */
     async prepare(scene, shot, token) {
+      currentTarget = null;
       const recipe = recipeForShot?.(shot);
       const beat = recipe?.liveBeats?.[shot.title];
       if (!beat) {
@@ -144,6 +149,11 @@ export function createSceneBeats({
                 dataManager.setLayerParams?.(id, params, { origin: 'scene' }),
               enable: (id) =>
                 dataManager.setEnabled?.(id, true, { origin: 'scene' }),
+              suppressCards: (id, on) => {
+                module(id)?.setSceneCardsSuppressed?.(on);
+                if (on) cardsSuppressed.add(id);
+                else cardsSuppressed.delete(id);
+              },
             },
             beat,
           )
@@ -155,6 +165,7 @@ export function createSceneBeats({
       } catch {
         /* an optional extra layer must never stall the scene */
       }
+      currentTarget = patch.target ?? beat.target ?? null;
       const text = patch.caption ?? beat.caption;
       if (text) caption?.show(text);
       else caption?.hide();
@@ -163,8 +174,17 @@ export function createSceneBeats({
         : shot;
     },
 
+    /** Ground point the current shot frames, or null (for framing checks). */
+    getTarget() {
+      return currentTarget;
+    },
+
     clear() {
       caption?.hide();
+      currentTarget = null;
+      for (const id of cardsSuppressed)
+        module(id)?.setSceneCardsSuppressed?.(false);
+      cardsSuppressed.clear();
     },
 
     destroy() {

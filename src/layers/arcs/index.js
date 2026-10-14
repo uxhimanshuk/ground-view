@@ -82,6 +82,8 @@ export function createArcLayer({
   let lastUpdate = null;
   let lastError = null;
   let loading = false;
+  // A scene caption stands in for the card; see setSceneCardsSuppressed.
+  let cardsSuppressed = false;
   let cap = Math.max(1, Math.floor(maxArcs));
 
   const show = (v) =>
@@ -134,6 +136,7 @@ export function createArcLayer({
 
   function showArcCard(arc) {
     selectedArcId = arc.id;
+    if (cardsSuppressed) return;
     const position = renderer.midpoint(arc.id);
     if (!position) return;
     publishCard(
@@ -151,7 +154,7 @@ export function createArcLayer({
 
   function showCountryCard(iso3) {
     const c = table?.get(iso3);
-    if (!c) return;
+    if (!c || cardsSuppressed) return;
     const s = summarizeCountry(arcs, iso3);
     const extra = [
       `Outbound ${valueLabel.toLowerCase()}: ${show(s.outbound)}`,
@@ -311,6 +314,7 @@ export function createArcLayer({
       shown = [];
       isolated = null;
       pendingIso = null;
+      cardsSuppressed = false;
       selectedArcId = null;
       lastUpdate = null;
       lastError = null;
@@ -320,6 +324,16 @@ export function createArcLayer({
     /** Isolate one country's flows (ISO3), or pass null to show the top set. */
     isolateCountry(iso3) {
       if (enabled) isolate(iso3);
+    },
+
+    /**
+     * Scene playback only: hide selection cards while a caption narrates the
+     * shot, so the caption never overlaps a card. Restored when the run ends.
+     */
+    setSceneCardsSuppressed(on) {
+      cardsSuppressed = on === true;
+      if (cardsSuppressed) clearCard();
+      else if (isolated) showCountryCard(isolated);
     },
 
     /** Share-link and scene options: `{ isolated: ISO3 | null }`. */

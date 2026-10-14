@@ -99,12 +99,96 @@ try {
     });
     if (s.title && !seen.has(s.title)) {
       seen.add(s.title);
+      const beatTarget = await page.evaluate(
+        () => window.__godsEyeView.sceneDirector._beats?.getTarget?.() ?? null,
+      );
       await sleep(4500);
       const again = await page.evaluate(() => {
         const cap = document.querySelector('.gv-scene-caption');
         return cap?.dataset.visible === 'true' ? cap.textContent : null;
       });
       n += 1;
+      // Framing: the ground point a beat frames must land in the middle 40% of
+      // the canvas, both ways. Projected with the scene's own transform.
+      // Let a long flight land first: wait for the camera to stop moving.
+      if (beatTarget)
+        await page.evaluate(async () => {
+          const cam = window.__godsEyeView.viewer.camera;
+          const key = () => cam.positionWC.toString();
+          for (let k = 0, last = '', still = 0; k < 40 && still < 3; k += 1) {
+            await new Promise((r) => setTimeout(r, 300));
+            const now = key();
+            still = now === last ? still + 1 : 0;
+            last = now;
+          }
+        });
+      const framing = await page.evaluate((target) => {
+        const g = window.__godsEyeView;
+        if (!target) return null;
+        const { viewer } = g;
+        const a = 6378137;
+        const f = 1 / 298.257223563;
+        const e2 = f * (2 - f);
+        const lat = (target.lat * Math.PI) / 180;
+        const lon = (target.lon * Math.PI) / 180;
+        const nu = a / Math.sqrt(1 - e2 * Math.sin(lat) ** 2);
+        const Cartesian3 = viewer.camera.positionWC.constructor;
+        const ground = new Cartesian3(
+          nu * Math.cos(lat) * Math.cos(lon),
+          nu * Math.cos(lat) * Math.sin(lon),
+          nu * (1 - e2) * Math.sin(lat),
+        );
+        const p = viewer.scene.cartesianToCanvasCoordinates(ground);
+        const c = viewer.scene.canvas;
+        if (!p) return { target, offscreen: true };
+        return {
+          target,
+          x: p.x / c.clientWidth,
+          y: p.y / c.clientHeight,
+        };
+      }, beatTarget);
+      if (framing) {
+        const inMiddle =
+          !framing.offscreen &&
+          framing.x >= 0.3 &&
+          framing.x <= 0.7 &&
+          framing.y >= 0.3 &&
+          framing.y <= 0.7;
+        check(
+          `beat ${n} "${s.title}" target is in the middle 40% of the frame`,
+          inMiddle,
+          framing.offscreen
+            ? 'off screen'
+            : `x=${framing.x.toFixed(2)} y=${framing.y.toFixed(2)}`,
+        );
+      }
+      const overlap = await page.evaluate(() => {
+        const cap = document.querySelector('.gv-scene-caption');
+        if (!cap || cap.dataset.visible !== 'true') return null;
+        const r = cap.getBoundingClientRect();
+        const hits = [
+          ...document.querySelectorAll(
+            '.world-overlay-card, [data-overlay-variant="card"]',
+          ),
+        ].filter((el) => {
+          const b = el.getBoundingClientRect();
+          return (
+            b.width > 0 &&
+            b.height > 0 &&
+            b.left < r.right &&
+            b.right > r.left &&
+            b.top < r.bottom &&
+            b.bottom > r.top
+          );
+        });
+        return hits.length;
+      });
+      if (overlap !== null)
+        check(
+          `beat ${n} caption overlaps no card element`,
+          overlap === 0,
+          `${overlap}`,
+        );
       const file = `${String(n).padStart(2, '0')}-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`;
       await page.screenshot({ path: path.join(OUT, file) });
       console.log(

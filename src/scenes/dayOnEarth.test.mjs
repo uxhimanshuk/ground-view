@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   BEAT_RESOLVERS,
   DAY_ON_EARTH_RECIPE,
+  lookAtPose,
   peopleText,
   pickTopAsylum,
   pickUnrestHotspot,
@@ -169,7 +170,8 @@ test('a runtime beat picks its own camera and caption without editing the saved 
   });
   const saved = shot('Top asylum country');
   const played = await beats.prepare({}, saved, { cancelled: false });
-  assert.equal(played.camera.lat, 10);
+  assert.ok(played.camera.lat < 10, 'the camera stands back from its target');
+  assert.deepEqual(beats.getTarget(), { lat: 10, lon: 20 });
   assert.equal(saved.camera.lat, 0, 'the saved shot is untouched');
   assert.match(captions.at(-1), /Turkey took in the most refugees/);
   assert.deepEqual(calls.params, [['refugees', { isolated: 'TUR' }]]);
@@ -201,4 +203,90 @@ test('a key-gated feed is skipped, and a cancelled run returns at once', async (
     cancelled: true,
   });
   assert.equal(cancelled.skipped, undefined);
+});
+
+/** Where does the line of sight of a pose meet a spherical Earth? (lat, lon) */
+function groundHit({ lat, lon, alt, heading, pitch }) {
+  const R = 6_371_000;
+  const rad = Math.PI / 180;
+  const up = (la, lo) => [
+    Math.cos(la * rad) * Math.cos(lo * rad),
+    Math.cos(la * rad) * Math.sin(lo * rad),
+    Math.sin(la * rad),
+  ];
+  const east = [-Math.sin(lon * rad), Math.cos(lon * rad), 0];
+  const north = [
+    -Math.sin(lat * rad) * Math.cos(lon * rad),
+    -Math.sin(lat * rad) * Math.sin(lon * rad),
+    Math.cos(lat * rad),
+  ];
+  const u = up(lat, lon);
+  const p = pitch * rad;
+  const h = heading * rad;
+  const dir = [0, 1, 2].map(
+    (i) =>
+      Math.cos(p) * (Math.sin(h) * east[i] + Math.cos(h) * north[i]) +
+      Math.sin(p) * u[i],
+  );
+  const o = u.map((c) => c * (R + alt));
+  const b = o.reduce((a, c, i) => a + c * dir[i], 0);
+  const c = o.reduce((a, v) => a + v * v, 0) - R * R;
+  const t = -b - Math.sqrt(b * b - c);
+  const hit = o.map((v, i) => v + t * dir[i]);
+  const norm = Math.hypot(...hit);
+  return {
+    lat: Math.asin(hit[2] / norm) / rad,
+    lon: Math.atan2(hit[1], hit[0]) / rad,
+  };
+}
+
+test('lookAtPose aims the line of sight at the target for every tilted beat', () => {
+  for (const [lat, lon, alt, pitch, heading] of [
+    [50, 12, 4_200_000, -70, 0],
+    [23, 80, 4_800_000, -70, 0],
+    [20, 20, 2_800_000, -60, 0],
+    [30, 30, 3_800_000, -70, 0],
+    [51, 10, 3_000_000, -55, 135],
+    [-30, 170, 3_000_000, -65, 270],
+  ]) {
+    const camera = lookAtPose(lat, lon, alt, { pitch, heading });
+    assert.equal(camera.alt, alt);
+    assert.equal(camera.pitch, pitch);
+    const hit = groundHit(camera);
+    assert.ok(Math.abs(hit.lat - lat) < 0.05, `lat ${hit.lat} vs ${lat}`);
+    assert.ok(Math.abs(hit.lon - lon) < 0.05, `lon ${hit.lon} vs ${lon}`);
+  }
+  // A straight-down pose needs no offset.
+  const down = lookAtPose(5, -80, 11_000_000);
+  assert.deepEqual([down.lat, down.lon], [5, -80]);
+});
+
+test('the tilted beats look at their targets, and the asylum beat hides the card under its caption', async () => {
+  const shots = new Map(
+    DAY_ON_EARTH_RECIPE.cameraPath.map((s) => [s.title, s]),
+  );
+  for (const [title, target] of [
+    ['Europe reads', DAY_ON_EARTH_RECIPE.liveBeats['Europe reads'].target],
+    [
+      'South Asia reads',
+      DAY_ON_EARTH_RECIPE.liveBeats['South Asia reads'].target,
+    ],
+  ]) {
+    const hit = groundHit(shots.get(title));
+    assert.ok(Math.abs(hit.lat - target.lat) < 0.05, title);
+    assert.ok(Math.abs(hit.lon - target.lon) < 0.05, title);
+  }
+  const calls = [];
+  const patch = BEAT_RESOLVERS['top-asylum']({
+    records: () => [flow('Germany', 'DEU', 'SYR', 1_000_000)],
+    setParams: (id, params) => calls.push(['params', id, params]),
+    suppressCards: (id, on) => calls.push(['cards', id, on]),
+  });
+  assert.deepEqual(patch.target, { lat: 10, lon: 20 });
+  assert.deepEqual(calls, [
+    ['params', 'refugees', { isolated: 'DEU' }],
+    ['cards', 'refugees', true],
+  ]);
+  const hit = groundHit(patch.camera);
+  assert.ok(Math.abs(hit.lat - 10) < 0.05 && Math.abs(hit.lon - 20) < 0.05);
 });
