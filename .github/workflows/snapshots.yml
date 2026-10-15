@@ -1,13 +1,14 @@
-# Refreshes the JSON snapshots the static Ground View demo reads in place of its
-# four server-backed feeds (unrest, news tone, attention, crises). The result is
-# force-pushed as a single-commit orphan branch `snapshots`, so history stays one
-# commit and the site reads https://raw.githubusercontent.com/<repo>/snapshots/<file>.
+# Refreshes the unrest snapshot (GDELT protest clusters) the Ground View site
+# reads. Attention is fetched by the browser directly, so this is the only feed.
+# The result is force-pushed as a single-commit orphan branch `snapshots`, so
+# history stays one commit and the site reads
+# https://raw.githubusercontent.com/<repo>/snapshots/unrest.json.
 # No secrets: GITHUB_TOKEN with contents: write is enough.
 name: snapshots
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '17 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -28,13 +29,13 @@ jobs:
         with:
           node-version: 24
 
-      # The script needs no npm install: it uses only Node built-ins and the
-      # repository's own provider code. If a feed fails it keeps that feed's
-      # previous file (read from the live `snapshots` branch) and marks it stale
-      # in manifest.json; it exits non-zero only when no feed has a file at all.
-      - name: Build snapshots
+      # The script needs no npm install: it uses only Node built-ins. If the
+      # build fails it keeps the previous file (read from the live `snapshots`
+      # branch) and marks it stale in manifest.json; it exits non-zero only when
+      # there is no file at all.
+      - name: Build snapshot
         run: >-
-          node scripts/build-snapshots.mjs out
+          node scripts/build-unrest-snapshot.mjs out
           --previous-base "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/snapshots/"
 
       - name: Publish the snapshots branch

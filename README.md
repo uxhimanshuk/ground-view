@@ -1,63 +1,38 @@
 # Ground View
 
-A live globe of what societies are doing: where people are protesting, what each language community is reading, where people have moved, and how countries differ in income, age and values. It is a fork of [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) by Bilawal Sidhu and Sameh Khamis, which puts planes, ships and satellites on a 3D globe. I kept their engine and pointed it at people instead of vehicles.
+What is the world reading today? Ground View puts yesterday's most read Wikipedia articles in 22 language editions on a globe, each pinned to a place where the language is spoken. It shows what each language community is reading on its own, and which articles are being read across many languages at once.
 
 **Live demo:** [himanshukalra.com/groundview](https://himanshukalra.com/groundview/)
 
-![Refugee and asylum flows converging on Germany, from the "A day on Earth" tour](docs/media/ground-view-demo.gif)
+![The globe with one pin per language and the list of articles read across languages on 13 October 2026](docs/ground-view.png)
 
 ## Why I built it
 
-I am a UX researcher. Most of my work is about how people make sense of complicated systems, and God's Eye View is a very good example of an interface that makes a lot of live data legible at once. I wanted to see whether the same instrument could show social life rather than traffic, and what changes when the subject is people. The main thing that changes is the ethics: everything here is aggregated to a country, a region, a language or a cluster of news reports. Nothing in Ground View follows or names an individual, and the voice assistant is instructed never to speculate about one.
+I am a UX researcher, and most of my work is about how people make sense of complicated systems. Wikipedia's reading figures are one of the few honest, public, daily records of what large groups of people are curious about. Comparing languages side by side shows how differently the same day looks from different places, and how rarely a story crosses most of them.
 
-## What you can look at
+Ground View started as a much larger fork of [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) by Bilawal Sidhu and Sameh Khamis, which puts planes, ships and satellites on a 3D globe. I pointed it at people instead, with ten layers on protest, migration, values and more. It was interesting but hard to read, so I cut it down to the one question that worked best. The full version is kept on the [`archive/full-v1`](https://github.com/uxhimanshuk/ground-view/tree/archive/full-v1) branch, and [docs/ARCHIVE.md](docs/ARCHIVE.md) describes what it had.
 
-The layers are grouped into three lenses. Each layer's card shows its source, the date of the data, and a one-line caveat about what the number does and does not mean.
+## How to read it
 
-| Lens | Layer | What it shows | Source | Refresh |
-| --- | --- | --- | --- | --- |
-| Pulse | Unrest | Protest and strike reports in the last 24 hours, clustered by place | GDELT 2.0 event files | 30 min |
-| Pulse | Attention | The five most read Wikipedia articles yesterday in 22 language editions | Wikimedia pageviews | daily |
-| Pulse | Disaster alerts | Earthquakes, floods, cyclones, volcanoes, droughts and wildfires | GDACS (UN and EC JRC) | 30 min |
-| Flows | Refugees | Refugees and asylum seekers by country of origin and asylum | UNHCR | yearly |
-| Flows | Migrant stock | People living outside their country of birth | UN DESA, 2024 | bundled |
-| Flows | Remittances | Money sent home between countries | World Bank / KNOMAD, 2021 | bundled |
-| Structure | Indicators | Gini, urban share, internet use, women in the labour force, youth unemployment, share over 65 | World Bank | daily |
-| Structure | Values | The Inglehart and Welzel cultural map: traditional to secular, survival to self-expression | World Values Survey, waves 1 to 6 | bundled |
-| Structure | Languages | 8,304 languages with their endangerment status | Glottolog 5.3 | bundled |
-| Structure | News tone | Average tone of news coverage about each country | GDELT 2.0 event files | 30 min |
-
-There is also a guided tour, "A day on Earth", in the Scenes panel. It picks its stops from the live data each time it runs, so the protest region and the largest asylum country it shows are the current ones.
+- **Pins** mark the 22 largest Wikipedia editions. A bigger pin means more reading of that edition's top articles.
+- **Read in several languages** lists articles that appear in the top 25 of two or more editions on the same day. Articles are matched across languages through Wikidata, so the German and Japanese pages about the same subject count as one.
+- **Only here** shows, for each language, its most read article that no other edition has in its top 25.
+- **Protest reports** is an optional faint layer of news reports about protests in the last 24 hours, from the GDELT Project. It is there for context, not as a measurement.
+- The date steps back one day at a time. The link in the address bar opens the same day and language for anyone you send it to.
 
 ## What the data cannot tell you
 
-These caveats are also on each card, but they are worth reading together.
+- Views are not approval. An article can be read because people are worried, curious or angry.
+- Pageviews include some automated traffic, and the lists are shown unfiltered, so they sometimes include explicit articles or articles about living people. They are aggregate reading behaviour. Nothing here follows a person over time.
+- Each language is pinned to one place for legibility. English is read everywhere but sits in England; Spanish sits in Mexico City.
+- GDELT protest reports are machine-coded from news. A place can be wrong, one event can be counted several times, and places with less press coverage look quieter than they are.
 
-- GDELT is machine-coded from news reports. A cluster of 800 reports around a city means a lot of coverage, not necessarily a large crowd, and places with less press coverage will look quieter than they are. Source links on each card are sometimes off-topic.
-- News tone is the tone of articles written about a place, scored by software. It is not how people there feel.
-- Wikipedia pageviews include some automated traffic, and the top lists sometimes include explicit articles or articles about living people. I show them unfiltered because they are aggregate reading behaviour.
-- GDACS alerts are estimated from hazard models. Conflicts and epidemics are not covered.
-- The values scores come from surveys carried out between 1996 and 2014; the latest World Values Survey wave is not in the published country aggregates. Germany uses the West German sample. Each card shows the survey year.
-- The remittance matrix for 2021 is the last one the World Bank published. The official file is no longer served, so I took it from the Internet Archive's copy of the official URL.
-- Migrant stock and remittances only include each country's largest corridors, to keep the download small.
+## How it works
 
-## Running it locally
+It is a single static page with no build step. The browser fetches reading figures directly from the Wikimedia pageviews API and resolves titles through the Wikipedia API. The globe is drawn with d3-geo on Natural Earth outlines. Protest reports come from a small script, run hourly by GitHub Actions, that reads GDELT's event files and publishes one JSON file to the `snapshots` branch.
 
-The live demo has no voice assistant and none of the original God's Eye View layers, because those need a local server and API keys. To run everything:
+To run it locally, serve the folder with any static server, for example `python3 -m http.server`, and open the address it prints. `npm test` runs the tests on Node 24 and needs no install.
 
-```bash
-git clone https://github.com/uxhimanshuk/ground-view.git
-cd ground-view
-npm ci
-npm run dev
-```
+## Credits
 
-Then open http://localhost:4173. Node 24 is required. No keys are needed for the Ground View layers. The original vehicle, camera and weather layers are still there, folded into a "From God's Eye View" section at the bottom of the layer panel, and the [upstream README](docs/UPSTREAM-README.md)'s key setup applies to them.
-
-## How the live demo stays live
-
-The demo is a static site. A GitHub Actions workflow runs every 30 minutes, downloads the last 24 hours of GDELT event files, yesterday's Wikipedia top lists and the current GDACS alerts, reduces them to small JSON summaries, and publishes those to the `snapshots` branch of this repository. The site reads those files. If a source fails, the previous snapshot is kept and the layer says how old it is.
-
-## Credits and licences
-
-The code is MIT licensed, as is the upstream project. All credit for the globe engine, the HUD, the scene director and the layer architecture goes to Bilawal Sidhu, Sameh Khamis and the God's Eye View contributors. The data keeps its own licences, which are listed with citations in [DATA_SOURCES.md](DATA_SOURCES.md) under "Ground View sources". The World Values Survey data is for non-commercial use.
+Reading data from the Wikimedia Foundation pageviews API and Wikidata. Protest reports from the GDELT Project. Land outlines from Natural Earth. The original idea and the earlier engine come from God's Eye View by Bilawal Sidhu and Sameh Khamis, under the MIT licence, which this repository keeps.
